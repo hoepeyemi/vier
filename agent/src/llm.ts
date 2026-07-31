@@ -1,18 +1,27 @@
-// LLM integration for generating natural language explanations
+// Qwen LLM integration for generating natural language explanations
 
-import Anthropic from '@anthropic-ai/sdk';
 import { AnalysisResult, Strategy, AgentThought } from './types.js';
 import { STRATEGY_NAMES } from './constants.js';
 
-// Configuration
-const LLM_CONFIG = {
-  model: 'claude-haiku-4-5-20251001', // Claude Haiku 4.5
-  maxTokens: 300,
-  timeoutMs: 30000, // 30 second timeout
-  maxRetries: 2,
+const QWEN_CONFIG = {
+  model: process.env.QWEN_MODEL || 'qwen-plus',
+  baseUrl: (process.env.QWEN_API_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1').replace(/\/$/, ''),
+  maxTokens: Number(process.env.QWEN_MAX_TOKENS || '300'),
+  timeoutMs: Number(process.env.QWEN_TIMEOUT_MS || '30000'),
+  maxRetries: Number(process.env.QWEN_MAX_RETRIES || '2'),
 };
 
-// Timeout wrapper for API calls
+type QwenChatResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationName: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -32,20 +41,20 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationName: s
 }
 
 export class LLMService {
-  private client: Anthropic | null = null;
-  private enabled: boolean = false;
-  private callCount: number = 0;
-  private lastCallTime: number = 0;
-  private rateLimitWindowMs: number = 60000; // 1 minute
-  private maxCallsPerWindow: number = 30;
+  private apiKey: string | null = null;
+  private enabled = false;
+  private callCount = 0;
+  private lastCallTime = 0;
+  private rateLimitWindowMs = 60000;
+  private maxCallsPerWindow = 30;
 
   constructor(apiKey?: string) {
     if (apiKey) {
-      this.client = new Anthropic({ apiKey });
+      this.apiKey = apiKey;
       this.enabled = true;
-      console.log(`LLM Service initialized with model: ${LLM_CONFIG.model}`);
+      console.log(`Qwen LLM service initialized with model: ${QWEN_CONFIG.model}`);
     } else {
-      console.warn('No Anthropic API key provided. Using template-based explanations.');
+      console.warn('No Qwen API key provided. Using template-based explanations.');
     }
   }
 
@@ -59,44 +68,59 @@ export class LLMService {
   }
 
   async generateExplanation(analysis: AnalysisResult): Promise<string> {
-    if (!this.enabled || !this.client) {
+    if (!this.enabled || !this.apiKey) {
       return this.generateTemplateExplanation(analysis);
     }
 
-    // Check rate limit
     if (!this.checkRateLimit()) {
-      console.warn('LLM rate limit reached, using template');
+      console.warn('Qwen rate limit reached, using template');
       return this.generateTemplateExplanation(analysis);
     }
 
     try {
       const prompt = this.buildPrompt(analysis);
+      const apiCall = this.callQwen(prompt);
+      const response = await withTimeout(apiCall, QWEN_CONFIG.timeoutMs, 'Qwen generateExplanation');
+      this.callCount++;
 
-      const apiCall = this.client.messages.create({
-        model: LLM_CONFIG.model,
-        max_tokens: LLM_CONFIG.maxTokens,
+      return response || this.generateTemplateExplanation(analysis);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Qwen LLM error, falling back to template:', errorMessage);
+      return this.generateTemplateExplanation(analysis);
+    }
+  }
+
+  private async callQwen(prompt: string): Promise<string> {
+    const response = await fetch(`${QWEN_CONFIG.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: QWEN_CONFIG.model,
+        max_tokens: QWEN_CONFIG.maxTokens,
+        temperature: 0.2,
         messages: [
+          {
+            role: 'system',
+            content: 'You are a financial advisor agent analyzing tokenized invoices for yield optimization. Explain decisions in clear, concise language that a small business owner can understand. Keep explanations under 3 sentences. Be direct and actionable. Never use jargon without explanation. Focus on the why behind recommendations.',
+          },
           {
             role: 'user',
             content: prompt,
           },
         ],
-        system: `You are an AI financial advisor agent analyzing tokenized invoices for yield optimization.
-Your role is to explain investment decisions in clear, concise language that a small business owner can understand.
-Keep explanations under 3 sentences. Be direct and actionable.
-Never use jargon without explanation. Focus on the "why" behind recommendations.`,
-      });
+      }),
+    });
 
-      const response = await withTimeout(apiCall, LLM_CONFIG.timeoutMs, 'LLM generateExplanation');
-      this.callCount++;
-
-      const textBlock = response.content.find((block) => block.type === 'text');
-      return textBlock?.text || this.generateTemplateExplanation(analysis);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('LLM error, falling back to template:', errorMessage);
-      return this.generateTemplateExplanation(analysis);
+    const payload = (await response.json().catch(() => ({}))) as QwenChatResponse;
+    if (!response.ok) {
+      throw new Error(payload.error?.message || `Qwen API returned HTTP ${response.status}`);
     }
+
+    return payload.choices?.[0]?.message?.content?.trim() || '';
   }
 
   private buildPrompt(analysis: AnalysisResult): string {
@@ -153,7 +177,6 @@ Explain why we're ${analysis.shouldAct ? 'changing to' : 'keeping'} the ${STRATE
     const thoughts: AgentThought[] = [];
     const now = Date.now();
 
-    // Step 1: Acknowledging the invoice
     thoughts.push({
       type: 'thinking',
       tokenId: analysis.tokenId,
@@ -162,7 +185,6 @@ Explain why we're ${analysis.shouldAct ? 'changing to' : 'keeping'} the ${STRATE
       data: { step: 1, total: 4 },
     });
 
-    // Step 2: Risk assessment
     thoughts.push({
       type: 'analysis',
       tokenId: analysis.tokenId,
@@ -175,7 +197,6 @@ Explain why we're ${analysis.shouldAct ? 'changing to' : 'keeping'} the ${STRATE
       },
     });
 
-    // Step 3: Strategy evaluation
     const strategyName = STRATEGY_NAMES[analysis.recommendedStrategy];
     thoughts.push({
       type: 'analysis',
@@ -189,7 +210,6 @@ Explain why we're ${analysis.shouldAct ? 'changing to' : 'keeping'} the ${STRATE
       },
     });
 
-    // Step 4: Decision
     thoughts.push({
       type: 'decision',
       tokenId: analysis.tokenId,

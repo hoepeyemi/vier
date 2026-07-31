@@ -45,7 +45,7 @@ WS_PORT=8080
 FCE_TEE_MODE=true
 FLARE_TEE_ID=<teeId printed by deploy-coston2>
 AGENT_PRIVATE_KEY=0xyour_agent_private_key
-ANTHROPIC_API_KEY=<optional>
+QWEN_API_KEY=<optional>
 ```
 
 The agent auto-loads `invoiceNFT`, `yieldVault`, `agentRouter`, `privacyRegistry`, and oracle addresses from `contracts/deployments/coston2.json`. Explicit env vars can still override those values for hosted deployments.

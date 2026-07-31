@@ -1,0 +1,18 @@
+{
+  "network": "coston2",
+  "chainId": 114,
+  "timestamp": "2026-07-31T22:58:52.933Z",
+  "deployer": "0x9404966338eB27aF420a952574d777598Bbb58c4",
+  "invoiceNFT": "0x7296c77Edd04092Fd6a8117c7f797E0680d97fa1",
+  "yieldVault": "0xec79fC54BCb5D41Db79552c1c463FFC33479Be03",
+  "privacyRegistry": "0xC9Dcb6910D59417B7227562eFB0776c7C3c0c280",
+  "agentRouter": "0x0734d90FA1857C073c4bf1e57f4F4151BE2e9f82",
+  "mockFDCVerifier": "0x5829940874605d61496CE818914B972c507E55c7",
+  "mockOracle": "0x126ced9DfA4695F6DC3ca788f34714Ff89849326",
+  "fccConfig": {
+    "teeId": "0x0967bd213c00e883a97232f72f88253186f103e29338bbc1036ed310cf8cc382",
+    "teeSignerAddress": "0x9404966338eB27aF420a952574d777598Bbb58c4",
+    "fceImageHash": "0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+    "teeAttestationMode": true
+  }
+}

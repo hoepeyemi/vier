@@ -48,7 +48,7 @@ When your client pays, withdraw principal + real accrued yield.
 - Smart contracts deployed on 4 chains
 - Yield from Aave V3 (real DeFi protocol)
 - Oracle prices from Pyth Network
-- AI agent with Claude analysis
+- AI agent with Qwen analysis
 - WebSocket real-time updates
 
 ### Limitations

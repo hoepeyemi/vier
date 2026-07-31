@@ -39,21 +39,21 @@ export class VierAgent {
     addresses: ContractAddresses,
     options: {
       privateKey?: string;
-      anthropicApiKey?: string;
+      qwenApiKey?: string;
       wsPort?: number;
       config?: Partial<AgentConfig>;
       teeMode?: boolean;
     } = {}
   ) {
     this.blockchain = new BlockchainService(rpcUrl, addresses, options.privateKey);
-    this.llm = new LLMService(options.anthropicApiKey);
+    this.llm = new LLMService(options.qwenApiKey);
     this.ws = new AgentWebSocket(options.wsPort || 8080);
 
     // Initialise TEE signer when FCE mode is enabled and a signing key exists
     this.teeMode = options.teeMode === true && !!options.privateKey;
     if (this.teeMode && options.privateKey) {
       this.teeSigner = new TEESigner(options.privateKey);
-      console.log(`🔐 Flare FCE mode: teeId=${this.teeSigner.getTeeId()}`);
+      console.log(`ðŸ” Flare FCE mode: teeId=${this.teeSigner.getTeeId()}`);
       console.log(`   Signer address: ${this.teeSigner.getSignerAddress()}`);
     }
 
@@ -75,7 +75,7 @@ export class VierAgent {
   async start(): Promise<void> {
     if (this.isRunning) return;
 
-    console.log('🤖 vier Agent starting...');
+    console.log('ðŸ¤– vier Agent starting...');
 
     // Start WebSocket server
     this.ws.start();
@@ -85,22 +85,22 @@ export class VierAgent {
     if (agentAddress) {
       const authorized = await this.blockchain.isAgentAuthorized(agentAddress);
       if (!authorized) {
-        console.warn(`⚠️  Agent ${agentAddress} is not authorized on AgentRouter`);
+        console.warn(`âš ï¸  Agent ${agentAddress} is not authorized on AgentRouter`);
       } else {
-        console.log(`✅ Agent ${agentAddress} is authorized`);
+        console.log(`âœ… Agent ${agentAddress} is authorized`);
       }
     } else {
-      console.warn('⚠️  No private key provided - agent will run in read-only mode');
+      console.warn('âš ï¸  No private key provided - agent will run in read-only mode');
     }
 
     // Verify Flare FCC TEE configuration on-chain
     if (this.teeMode && this.teeSigner) {
       const teeEnabledOnChain = await this.blockchain.isTEEAttestationModeEnabled();
       if (!teeEnabledOnChain) {
-        console.warn('⚠️  AgentRouter teeAttestationMode=false on-chain but agent is in FCE mode');
+        console.warn('âš ï¸  AgentRouter teeAttestationMode=false on-chain but agent is in FCE mode');
         console.warn('   Call agentRouter.setTEEAttestationMode(true) or disable FCE_TEE_MODE');
       } else {
-        console.log(`✅ Flare FCC: teeAttestationMode confirmed active on-chain`);
+        console.log(`âœ… Flare FCC: teeAttestationMode confirmed active on-chain`);
         console.log(`   teeId: ${this.teeSigner.getTeeId()}`);
         console.log(`   signer: ${this.teeSigner.getSignerAddress()}`);
       }
@@ -116,15 +116,15 @@ export class VierAgent {
       type: 'thinking',
       tokenId: 'system',
       message: this.teeMode
-        ? '🔐 vier FCE Agent active — decisions routed through Flare Confidential Compute TEE'
-        : '🏭 vier Agent is now active and monitoring invoices...',
+        ? 'ðŸ” vier FCE Agent active â€” decisions routed through Flare Confidential Compute TEE'
+        : 'ðŸ­ vier Agent is now active and monitoring invoices...',
       timestamp: Date.now(),
     });
 
     // Start analysis loop
     this.startAnalysisLoop();
 
-    console.log('🤖 vier Agent started successfully');
+    console.log('ðŸ¤– vier Agent started successfully');
   }
 
   stop(): void {
@@ -138,34 +138,34 @@ export class VierAgent {
     this.ws.stop();
     this.isRunning = false;
 
-    console.log('🤖 vier Agent stopped');
+    console.log('ðŸ¤– vier Agent stopped');
   }
 
   private setupEventListeners(): void {
     // Listen for on-chain decision events
     this.blockchain.onDecisionRecorded((tokenId, strategy, confidence) => {
-      console.log(`📡 Event: DecisionRecorded for #${tokenId}`);
+      console.log(`ðŸ“¡ Event: DecisionRecorded for #${tokenId}`);
       this.broadcastThought({
         type: 'execution',
         tokenId,
-        message: `📡 On-chain: Decision recorded - ${STRATEGY_NAMES[strategy]} (${confidence}% confidence)`,
+        message: `ðŸ“¡ On-chain: Decision recorded - ${STRATEGY_NAMES[strategy]} (${confidence}% confidence)`,
         timestamp: Date.now(),
         data: { strategy: STRATEGY_NAMES[strategy], confidence },
       });
     });
 
     this.blockchain.onDecisionExecuted((tokenId, strategy) => {
-      console.log(`📡 Event: DecisionExecuted for #${tokenId}`);
+      console.log(`ðŸ“¡ Event: DecisionExecuted for #${tokenId}`);
       this.broadcastThought({
         type: 'execution',
         tokenId,
-        message: `📡 On-chain: Strategy changed to ${STRATEGY_NAMES[strategy]}`,
+        message: `ðŸ“¡ On-chain: Strategy changed to ${STRATEGY_NAMES[strategy]}`,
         timestamp: Date.now(),
         data: { strategy: STRATEGY_NAMES[strategy] },
       });
     });
 
-    console.log('✅ Contract event listeners initialized');
+    console.log('âœ… Contract event listeners initialized');
   }
 
   private isRateLimited(tokenId: string): boolean {
@@ -185,7 +185,7 @@ export class VierAgent {
     if (Date.now() > this.circuitBreakerResetTime) {
       this.circuitBreakerOpen = false;
       this.consecutiveFailures = 0;
-      console.log('🔄 Circuit breaker reset');
+      console.log('ðŸ”„ Circuit breaker reset');
       return false;
     }
 
@@ -195,7 +195,7 @@ export class VierAgent {
   private tripCircuitBreaker(): void {
     this.circuitBreakerOpen = true;
     this.circuitBreakerResetTime = Date.now() + this.CIRCUIT_BREAKER_TIMEOUT_MS;
-    console.warn(`⚠️ Circuit breaker tripped after ${this.consecutiveFailures} failures. Pausing for ${this.CIRCUIT_BREAKER_TIMEOUT_MS / 1000}s`);
+    console.warn(`âš ï¸ Circuit breaker tripped after ${this.consecutiveFailures} failures. Pausing for ${this.CIRCUIT_BREAKER_TIMEOUT_MS / 1000}s`);
   }
 
   private startAnalysisLoop(): void {
@@ -226,11 +226,11 @@ export class VierAgent {
       ]);
     } catch (error) {
       if (error instanceof Error && error.message === 'Analysis cycle timeout') {
-        console.error('⚠️ Analysis cycle exceeded 60s timeout, skipping...');
+        console.error('âš ï¸ Analysis cycle exceeded 60s timeout, skipping...');
         this.broadcastThought({
           type: 'error',
           tokenId: 'system',
-          message: '⏱️ Analysis cycle timed out - will retry next interval',
+          message: 'â±ï¸ Analysis cycle timed out - will retry next interval',
           timestamp: Date.now(),
         });
         this.tripCircuitBreaker(); // Trip circuit breaker on timeout
@@ -243,7 +243,7 @@ export class VierAgent {
   private async runAnalysisCycleInternal(): Promise<void> {
     // Check circuit breaker
     if (this.checkCircuitBreaker()) {
-      console.log('⏸️ Circuit breaker is open, skipping cycle');
+      console.log('â¸ï¸ Circuit breaker is open, skipping cycle');
       return;
     }
 
@@ -252,7 +252,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'thinking',
         tokenId: 'system',
-        message: '📡 Checking market conditions via Pyth Oracle...',
+        message: 'ðŸ“¡ Checking market conditions via Pyth Oracle...',
         timestamp: Date.now(),
       });
 
@@ -264,8 +264,8 @@ export class VierAgent {
 
       // Broadcast market status with drama
       if (this.currentMarketAlert) {
-        const alertEmoji = this.currentMarketAlert.level === 'critical' ? '🚨' :
-                          this.currentMarketAlert.level === 'warning' ? '⚠️' : 'ℹ️';
+        const alertEmoji = this.currentMarketAlert.level === 'critical' ? 'ðŸš¨' :
+                          this.currentMarketAlert.level === 'warning' ? 'âš ï¸' : 'â„¹ï¸';
 
         this.broadcastThought({
           type: this.currentMarketAlert.level === 'critical' ? 'error' : 'analysis',
@@ -284,7 +284,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'decision',
           tokenId: 'market',
-          message: `🤖 ${this.currentMarketAlert.recommendation}`,
+          message: `ðŸ¤– ${this.currentMarketAlert.recommendation}`,
           timestamp: Date.now(),
         });
 
@@ -294,13 +294,13 @@ export class VierAgent {
           ? `ETH: $${this.currentMarketConditions.ethPrice.toFixed(2)}`
           : 'Prices: Simulated mode';
 
-        const regimeEmoji = regime === 'bull' ? '📈' : regime === 'bear' ? '📉' : regime === 'volatile' ? '🌊' : '⚖️';
+        const regimeEmoji = regime === 'bull' ? 'ðŸ“ˆ' : regime === 'bear' ? 'ðŸ“‰' : regime === 'volatile' ? 'ðŸŒŠ' : 'âš–ï¸';
         const regimeLabel = regime.charAt(0).toUpperCase() + regime.slice(1);
 
         this.broadcastThought({
           type: 'thinking',
           tokenId: 'system',
-          message: `✅ Market ${regimeLabel} ${regimeEmoji} (${priceInfo}) - volatility: ${this.currentMarketConditions.volatilityLevel}`,
+          message: `âœ… Market ${regimeLabel} ${regimeEmoji} (${priceInfo}) - volatility: ${this.currentMarketConditions.volatilityLevel}`,
           timestamp: Date.now(),
           data: {
             regime,
@@ -315,7 +315,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'thinking',
         tokenId: 'system',
-        message: '🔍 Scanning blockchain for invoices...',
+        message: 'ðŸ” Scanning blockchain for invoices...',
         timestamp: Date.now(),
       });
 
@@ -331,7 +331,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'error',
           tokenId: 'system',
-          message: `⚠️ Contract call failed: ${errors}. Will retry next cycle.`,
+          message: `âš ï¸ Contract call failed: ${errors}. Will retry next cycle.`,
           timestamp: Date.now(),
         });
         return;
@@ -347,7 +347,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'thinking',
           tokenId: 'system',
-          message: '📭 No invoices found. Waiting for new invoices to be minted...',
+          message: 'ðŸ“­ No invoices found. Waiting for new invoices to be minted...',
           timestamp: Date.now(),
         });
         return;
@@ -359,7 +359,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'thinking',
         tokenId: 'system',
-        message: `📊 Found ${allTokenIds.length} invoice(s): ${depositCount} earning yield, ${pendingCount} pending. Analyzing...`,
+        message: `ðŸ“Š Found ${allTokenIds.length} invoice(s): ${depositCount} earning yield, ${pendingCount} pending. Analyzing...`,
         timestamp: Date.now(),
       });
 
@@ -376,7 +376,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'thinking',
         tokenId: 'system',
-        message: `✅ Cycle complete. Next scan in ${this.config.analysisInterval / 1000}s | Tx cost: ${txCost.costUsd}`,
+        message: `âœ… Cycle complete. Next scan in ${this.config.analysisInterval / 1000}s | Tx cost: ${txCost.costUsd}`,
         timestamp: Date.now(),
         data: { txCostUsd: txCost.costUsd },
       });
@@ -393,7 +393,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'error',
           tokenId: 'system',
-          message: `⚠️ Too many failures (${this.consecutiveFailures}). Pausing analysis for 1 minute...`,
+          message: `âš ï¸ Too many failures (${this.consecutiveFailures}). Pausing analysis for 1 minute...`,
           timestamp: Date.now(),
         });
       }
@@ -403,7 +403,7 @@ export class VierAgent {
   async analyzeInvoice(tokenId: string): Promise<AnalysisResult | null> {
     // Check rate limiting
     if (this.isRateLimited(tokenId)) {
-      console.log(`⏳ Invoice #${tokenId} is rate-limited, skipping`);
+      console.log(`â³ Invoice #${tokenId} is rate-limited, skipping`);
       return null;
     }
     try {
@@ -424,7 +424,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'thinking',
         tokenId,
-        message: `🔍 Analyzing Invoice #${tokenId}${isDeposited ? ' (earning yield)' : ' (awaiting deposit)'}...`,
+        message: `ðŸ” Analyzing Invoice #${tokenId}${isDeposited ? ' (earning yield)' : ' (awaiting deposit)'}...`,
         timestamp: Date.now(),
         data: { step: 1, total: 4, isDeposited },
       });
@@ -449,7 +449,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'analysis',
         tokenId,
-        message: `📈 Risk Score: ${analysis.riskScore}/100 | Payment Prob: ${analysis.paymentProbability}% | Days to due: ${analysis.daysUntilDue}`,
+        message: `ðŸ“ˆ Risk Score: ${analysis.riskScore}/100 | Payment Prob: ${analysis.paymentProbability}% | Days to due: ${analysis.daysUntilDue}`,
         timestamp: Date.now(),
         data: {
           riskScore: analysis.riskScore,
@@ -466,7 +466,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'analysis',
           tokenId,
-          message: `⚡ MARKET OVERRIDE: ${STRATEGY_NAMES[analysis.currentStrategy]} → ${STRATEGY_NAMES[analysis.recommendedStrategy]} (was ${STRATEGY_NAMES[originalStrategy]})`,
+          message: `âš¡ MARKET OVERRIDE: ${STRATEGY_NAMES[analysis.currentStrategy]} â†’ ${STRATEGY_NAMES[analysis.recommendedStrategy]} (was ${STRATEGY_NAMES[originalStrategy]})`,
           timestamp: Date.now(),
           data: {
             currentStrategy: STRATEGY_NAMES[analysis.currentStrategy],
@@ -481,7 +481,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'analysis',
           tokenId,
-          message: `🎯 Strategy: ${STRATEGY_NAMES[analysis.currentStrategy]} → ${STRATEGY_NAMES[analysis.recommendedStrategy]} (${analysis.confidence}% confidence)`,
+          message: `ðŸŽ¯ Strategy: ${STRATEGY_NAMES[analysis.currentStrategy]} â†’ ${STRATEGY_NAMES[analysis.recommendedStrategy]} (${analysis.confidence}% confidence)`,
           timestamp: Date.now(),
           data: {
             currentStrategy: STRATEGY_NAMES[analysis.currentStrategy],
@@ -517,7 +517,7 @@ export class VierAgent {
           this.broadcastThought({
             type: 'thinking',
             tokenId,
-            message: `💡 Invoice #${tokenId} not yet deposited. Deposit it to start earning with ${STRATEGY_NAMES[analysis.recommendedStrategy]} strategy.`,
+            message: `ðŸ’¡ Invoice #${tokenId} not yet deposited. Deposit it to start earning with ${STRATEGY_NAMES[analysis.recommendedStrategy]} strategy.`,
             timestamp: Date.now(),
             data: { recommendedStrategy: STRATEGY_NAMES[analysis.recommendedStrategy], awaitingDeposit: true },
           });
@@ -538,12 +538,12 @@ export class VierAgent {
   private async executeDecision(tokenId: string, analysis: AnalysisResult): Promise<void> {
     const strategyName = STRATEGY_NAMES[analysis.recommendedStrategy];
 
-    // ── Flare FCC path: TEE-attested execution ────────────────────────
+    // â”€â”€ Flare FCC path: TEE-attested execution â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (this.teeMode && this.teeSigner) {
       this.broadcastThought({
         type: 'execution',
         tokenId,
-        message: `🔐 Creating Flare FCE attestation for ${strategyName} strategy...`,
+        message: `ðŸ” Creating Flare FCE attestation for ${strategyName} strategy...`,
         timestamp: Date.now(),
       });
 
@@ -558,7 +558,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'execution',
           tokenId,
-          message: `📡 Submitting TEE-attested payload to AgentRouter (teeId: ${attestation.teeId.slice(0, 10)}...)`,
+          message: `ðŸ“¡ Submitting TEE-attested payload to AgentRouter (teeId: ${attestation.teeId.slice(0, 10)}...)`,
           timestamp: Date.now(),
           data: { teeId: attestation.teeId },
         });
@@ -574,7 +574,7 @@ export class VierAgent {
           this.broadcastThought({
             type: 'execution',
             tokenId,
-            message: `✅ TEE-verified strategy: ${strategyName} (FDC attestation confirmed on Flare)`,
+            message: `âœ… TEE-verified strategy: ${strategyName} (FDC attestation confirmed on Flare)`,
             timestamp: Date.now(),
             data: { txHash: result.txHash, teeId: attestation.teeId },
           });
@@ -583,7 +583,7 @@ export class VierAgent {
           this.broadcastThought({
             type: 'error',
             tokenId,
-            message: `❌ TEE attestation failed: ${result.error}`,
+            message: `âŒ TEE attestation failed: ${result.error}`,
             timestamp: Date.now(),
           });
         }
@@ -593,7 +593,7 @@ export class VierAgent {
         this.broadcastThought({
           type: 'error',
           tokenId,
-          message: `❌ FCE error — aborting (TEE mode requires attestation; no silent fallback)`,
+          message: `âŒ FCE error â€” aborting (TEE mode requires attestation; no silent fallback)`,
           timestamp: Date.now(),
         });
         // In TEE mode: NEVER fall through to recordDecision.
@@ -603,11 +603,11 @@ export class VierAgent {
       }
     }
 
-    // ── Standard path: legacy authorized-agent execution (teeMode=false only) ─────
+    // â”€â”€ Standard path: legacy authorized-agent execution (teeMode=false only) â”€â”€â”€â”€â”€
     this.broadcastThought({
       type: 'execution',
       tokenId,
-      message: `⚡ Executing: Change to ${strategyName} strategy...`,
+      message: `âš¡ Executing: Change to ${strategyName} strategy...`,
       timestamp: Date.now(),
     });
 
@@ -623,7 +623,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'execution',
         tokenId,
-        message: `✅ Strategy updated to ${strategyName}`,
+        message: `âœ… Strategy updated to ${strategyName}`,
         timestamp: Date.now(),
         data: { txHash: result.txHash },
       });
@@ -632,7 +632,7 @@ export class VierAgent {
       this.broadcastThought({
         type: 'error',
         tokenId,
-        message: '❌ Strategy update failed - will retry next cycle',
+        message: 'âŒ Strategy update failed - will retry next cycle',
         timestamp: Date.now(),
       });
     }
@@ -643,11 +643,11 @@ export class VierAgent {
 
     // Also log to console with emoji
     const prefix = {
-      thinking: '💭',
-      analysis: '📊',
-      decision: '🎯',
-      execution: '⚡',
-      error: '❌',
+      thinking: 'ðŸ’­',
+      analysis: 'ðŸ“Š',
+      decision: 'ðŸŽ¯',
+      execution: 'âš¡',
+      error: 'âŒ',
     }[thought.type];
 
     console.log(`${prefix} [${thought.tokenId}] ${thought.message}`);

@@ -1,4 +1,4 @@
-﻿# Elsa's Agentic Fellowship - Submission Draft
+# Elsa's Agentic Fellowship - Submission Draft
 
 > Form: https://tally.so/r/PdEG21
 > Status: DRAFT - needs personal details before submitting
@@ -21,7 +21,7 @@ https://github.com/Yonkoo11/vier
 
 vier is an autonomous treasury agent for crypto freelancers. You create an invoice, the agent tokenizes it as a privacy-preserving NFT, deposits collateral into a yield vault, and manages that idle capital until the client pays. The agent runs on a loop - it scores invoice risk, reads market conditions, picks between yield strategies, and auto-executes when it's confident enough. Below 70% confidence, it asks you first.
 
-The stack is Solidity contracts (Foundry, all OpenZeppelin - chain-agnostic), a TypeScript agent service using Claude for reasoning, and a Next.js frontend. Contracts are deployed on Cronos testnet today, porting to Base for x402 integration.
+The stack is Solidity contracts (Foundry, all OpenZeppelin - chain-agnostic), a TypeScript agent service using Qwen for reasoning, and a Next.js frontend. Contracts are deployed on Cronos testnet today, porting to Base for x402 integration.
 
 ### What problem are you solving?
 
@@ -51,11 +51,11 @@ https://x.com/soligxbt
 
 ### Details of Each Team Member
 
-Alex (solo founder) - Full-stack developer shipping across DeFi, smart contracts, and AI agents. 34 public repos on GitHub. Recent work includes cipher-pol (ZK private payments for AI agents on Starknet using Groth16 proofs and x402), a Curve-style StableSwap DEX on Polkadot, an autonomous ERC-8004 trust scoring agent for Celo, and an SPL token rescue bot for compromised Solana wallets. Built vier end-to-end: Solidity contracts, TypeScript agent with Claude integration, and Next.js frontend.
+Alex (solo founder) - Full-stack developer shipping across DeFi, smart contracts, and AI agents. 34 public repos on GitHub. Recent work includes cipher-pol (ZK private payments for AI agents on Starknet using Groth16 proofs and x402), a Curve-style StableSwap DEX on Polkadot, an autonomous ERC-8004 trust scoring agent for Celo, and an SPL token rescue bot for compromised Solana wallets. Built vier end-to-end: Solidity contracts, TypeScript agent with Qwen integration, and Next.js frontend.
 
 ### What relevant experience does your team have?
 
-I've built and shipped across the stack that vier needs. On the smart contract side: DEX contracts (polkadot-stableswap), prediction markets (flashbets on Base with Chainlink), and ZK circuits (cipher-pol on Starknet). On the agent side: sentinel8004 (autonomous trust scoring agent on Celo), hermes-dojo (self-improving agent system), and vier's own yield agent using the Anthropic SDK. I've worked with x402 before - cipher-pol uses it for private agent payments. I build fast, ship to testnet, and iterate from there.
+I've built and shipped across the stack that vier needs. On the smart contract side: DEX contracts (polkadot-stableswap), prediction markets (flashbets on Base with Chainlink), and ZK circuits (cipher-pol on Starknet). On the agent side: sentinel8004 (autonomous trust scoring agent on Celo), hermes-dojo (self-improving agent system), and vier's own yield agent using the Qwen chat API. I've worked with x402 before - cipher-pol uses it for private agent payments. I build fast, ship to testnet, and iterate from there.
 
 ---
 
@@ -158,7 +158,7 @@ $5,000
 - The optimizer "learning" is logged but there's no feedback loop coded yet.
 - Haven't actually called an x402 endpoint. Claiming integration plans from docs alone.
 
-**What I (Claude) did NOT verify:**
+**What I did NOT verify:**
 - Whether the Vercel deployment currently works
 - Whether the GitHub repo README matches what judges would expect to see
 - Whether any of the 27 uncommitted files contain breaking changes

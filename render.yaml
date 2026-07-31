@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: vier-agent
     runtime: docker
@@ -22,5 +22,5 @@
         value: "0x447De96C1c3E15af485a41fb1B5Fde888B02d9eF"
       - key: AGENT_PRIVATE_KEY
         sync: false
-      - key: ANTHROPIC_API_KEY
+      - key: QWEN_API_KEY
         sync: false

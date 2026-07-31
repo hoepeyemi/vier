@@ -1,4 +1,4 @@
-﻿# vier Agent
+# vier Agent
 
 The vier agent monitors the Flare Coston2 deployment, analyzes invoice and yield state, and can trigger on-chain strategy updates through `AgentRouter`.
 
@@ -52,7 +52,7 @@ MOCK_ORACLE_ADDRESS=
 PYTH_ORACLE_ADDRESS=0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3
 AAVE_YIELD_ADDRESS=0x5a179d261fD322ecaED06FA9Aa2973980D74322c
 AGENT_PRIVATE_KEY=0x...
-ANTHROPIC_API_KEY=sk-ant-...
+QWEN_API_KEY=your-qwen-api-key
 ```
 
 If you use the live deployment manifest, the agent can read the Flare Coston2 defaults from:

@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: vier-agent
     env: node
@@ -23,5 +23,5 @@
         value: 0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3
       - key: AGENT_PRIVATE_KEY
         sync: false  # Will be set via Render dashboard (sensitive)
-      - key: ANTHROPIC_API_KEY
+      - key: QWEN_API_KEY
         sync: false  # Will be set via Render dashboard (sensitive)

@@ -1,7 +1,7 @@
 # vier - Progress
 
 ## Current State (2026-03-27)
-Deployed to Base Sepolia. All flows verified on-chain and in UI. Agent runs with real Pyth + Claude analysis.
+Deployed to Base Sepolia. All flows verified on-chain and in UI. Agent runs with real Pyth + Qwen analysis.
 
 ## Verified Working (with evidence)
 
@@ -15,7 +15,7 @@ Deployed to Base Sepolia. All flows verified on-chain and in UI. Agent runs with
 ### Agent
 - Connects to Base Sepolia, reads contracts, detects invoices
 - Pyth Oracle: fetched real ETH price ($2063-2064)
-- Claude Haiku 4.5: generates real analysis (not templates)
+- Qwen: generates real analysis (not templates)
 - Health endpoint works at :3001/health
 - No errors (event filters disabled, polling-only)
 

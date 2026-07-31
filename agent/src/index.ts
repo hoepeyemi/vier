@@ -21,7 +21,7 @@ function validateEnvironment(addresses: ContractAddresses): { valid: boolean; wa
   const envVars: EnvValidation[] = [
     { name: 'COSTON2_RPC', value: process.env.RPC_URL || process.env.CHAIN_RPC_URL || process.env.COSTON2_RPC || process.env.FLARE_COSTON2_RPC, required: false, description: 'Flare Coston2 RPC endpoint' },
     { name: 'AGENT_PRIVATE_KEY', value: process.env.AGENT_PRIVATE_KEY, required: false, description: 'Agent wallet key' },
-    { name: 'ANTHROPIC_API_KEY', value: process.env.ANTHROPIC_API_KEY, required: false, description: 'LLM API key' },
+    { name: 'QWEN_API_KEY', value: process.env.QWEN_API_KEY, required: false, description: 'Qwen API key' },
     { name: 'WS_PORT', value: process.env.WS_PORT, required: false, description: 'WebSocket port' },
     { name: 'INVOICE_NFT_ADDRESS', value: addresses.invoiceNFT, required: true, description: 'InvoiceNFT contract' },
     { name: 'YIELD_VAULT_ADDRESS', value: addresses.yieldVault, required: true, description: 'YieldVault contract' },
@@ -138,7 +138,7 @@ async function selectWorkingRpcUrl(urls: string[]): Promise<string> {
 
 // Load configuration from environment
 const PRIVATE_KEY = normalizePrivateKey(process.env.AGENT_PRIVATE_KEY);
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const QWEN_API_KEY = process.env.QWEN_API_KEY;
 const WS_PORT = parseInt(process.env.WS_PORT || '8080');
 const DEPLOYMENT_NETWORK = process.env.DEPLOYMENT_NETWORK || 'coston2';
 const DEPLOYMENT_DEFAULTS = readDeploymentDefaults(DEPLOYMENT_NETWORK);
@@ -165,25 +165,25 @@ async function main() {
   const RPC_URL = await selectWorkingRpcUrl(COSTON2_RPC_FALLBACKS);
 
   console.log('');
-  console.log('  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ•—  â–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ•—   â–ˆâ–ˆâ•—');
-  console.log('  â–ˆâ–ˆâ•”â•â•â•â•â•â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•‘ â–ˆâ–ˆâ•”â•â•šâ•â•â–ˆâ–ˆâ•”â•â•â•â–ˆâ–ˆâ•”â•â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â•šâ–ˆâ–ˆâ•— â–ˆâ–ˆâ•”â•');
-  console.log('  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â• â•šâ–ˆâ–ˆâ–ˆâ–ˆâ•”â• ');
-  console.log('  â–ˆâ–ˆâ•”â•â•â•  â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•—    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—  â•šâ–ˆâ–ˆâ•”â•  ');
-  console.log('  â–ˆâ–ˆâ•‘     â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•—   â–ˆâ–ˆâ•‘   â•šâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘   ');
-  console.log('  â•šâ•â•     â•šâ•â•  â•šâ•â•â•šâ•â•  â•šâ•â•   â•šâ•â•    â•šâ•â•â•â•â•â• â•šâ•â•  â•šâ•â•   â•šâ•â•   ');
+  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”');
+  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜ Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â');
+  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â    Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â ');
+  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”    Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”  Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â  ');
+  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜     Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   ');
+  console.log('  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â     Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â   Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â    Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â   Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â   ');
   console.log('');
 
   // Validate environment before starting
   const validation = validateEnvironment(ADDRESSES);
 
   if (validation.warnings.length > 0) {
-    console.log('âš ï¸  Environment Warnings:');
+    console.log('Ã¢Å¡Â Ã¯Â¸Â  Environment Warnings:');
     validation.warnings.forEach((w) => console.log(`   - ${w}`));
     console.log('');
   }
 
   if (!validation.valid) {
-    console.error('âŒ Environment Validation Failed:');
+    console.error('Ã¢ÂÅ’ Environment Validation Failed:');
     validation.errors.forEach((e) => console.error(`   - ${e}`));
     console.error('');
     console.error('Please configure the required environment variables.');
@@ -193,19 +193,19 @@ async function main() {
   console.log('  x402 AI-Managed B2B Payments');
   console.log('');
   console.log('='.repeat(60));
-  console.log(`  ðŸ“¡ RPC:     ${RPC_URL}`);
-  console.log(`  ðŸ”Œ WS:      ws://localhost:${WS_PORT}`);
-  console.log(`  ðŸ”‘ Wallet:  ${PRIVATE_KEY ? 'âœ… Configured' : 'âŒ Read-only mode'}`);
-  console.log(`  ðŸ¤– LLM:     ${ANTHROPIC_API_KEY ? 'âœ… AI (Real)' : 'âš¡ Template mode'}`);
-  console.log(`  ðŸ” FCE TEE: ${FCE_TEE_MODE ? 'âœ… Flare Confidential Compute' : 'âš ï¸  Standard mode'}`);
+  console.log(`  Ã°Å¸â€œÂ¡ RPC:     ${RPC_URL}`);
+  console.log(`  Ã°Å¸â€Å’ WS:      ws://localhost:${WS_PORT}`);
+  console.log(`  Ã°Å¸â€â€˜ Wallet:  ${PRIVATE_KEY ? 'Ã¢Å“â€¦ Configured' : 'Ã¢ÂÅ’ Read-only mode'}`);
+  console.log(`  Ã°Å¸Â¤â€“ LLM:     ${QWEN_API_KEY ? 'Ã¢Å“â€¦ AI (Real)' : 'Ã¢Å¡Â¡ Template mode'}`);
+  console.log(`  Ã°Å¸â€Â FCE TEE: ${FCE_TEE_MODE ? 'Ã¢Å“â€¦ Flare Confidential Compute' : 'Ã¢Å¡Â Ã¯Â¸Â  Standard mode'}`);
   console.log('='.repeat(60));
   console.log('');
   console.log('  Data Sources:');
-  console.log(`  ðŸ“Š Oracle: ${ADDRESSES.pythOracle ? 'âœ… Pyth Network (Real-time)' : 'âš ï¸  Mock Oracle (Simulated)'}`);
-  console.log(`  ðŸ’° Yield: ${ADDRESSES.aaveYieldSource ? 'âœ… Flare Vault (Real DeFi)' : 'âš ï¸  Simulated Yield'}`);
+  console.log(`  Ã°Å¸â€œÅ  Oracle: ${ADDRESSES.pythOracle ? 'Ã¢Å“â€¦ Pyth Network (Real-time)' : 'Ã¢Å¡Â Ã¯Â¸Â  Mock Oracle (Simulated)'}`);
+  console.log(`  Ã°Å¸â€™Â° Yield: ${ADDRESSES.aaveYieldSource ? 'Ã¢Å“â€¦ Flare Vault (Real DeFi)' : 'Ã¢Å¡Â Ã¯Â¸Â  Simulated Yield'}`);
   if (!isProduction) {
     console.log('');
-    console.log('  âš ï¸  Running with SIMULATED data for demo.');
+    console.log('  Ã¢Å¡Â Ã¯Â¸Â  Running with SIMULATED data for demo.');
     console.log('  Set PYTH_ORACLE_ADDRESS for production oracle price feeds.');
   }
   console.log('='.repeat(60));
@@ -213,14 +213,14 @@ async function main() {
   // Validate contract addresses
   const zeroAddress = '0x0000000000000000000000000000000000000000';
   if (ADDRESSES.invoiceNFT === zeroAddress) {
-    console.warn('\nâš ï¸  Contract addresses not configured.');
+    console.warn('\nÃ¢Å¡Â Ã¯Â¸Â  Contract addresses not configured.');
     console.log('   Set environment variables after deployment.\n');
   }
 
   // Create agent instance
   const agent = new VierAgent(RPC_URL, ADDRESSES, {
     privateKey: PRIVATE_KEY,
-    anthropicApiKey: ANTHROPIC_API_KEY,
+    qwenApiKey: QWEN_API_KEY,
     wsPort: WS_PORT,
     teeMode: FCE_TEE_MODE,
     config: {
@@ -235,11 +235,11 @@ async function main() {
   await agent.start();
 
   // Health check is now built into WebSocket server (same port)
-  console.log(`  ðŸ¥ Health: http://localhost:${WS_PORT}/health`);
+  console.log(`  Ã°Å¸ÂÂ¥ Health: http://localhost:${WS_PORT}/health`);
 
   // Handle graceful shutdown
   const shutdown = () => {
-    console.log('\nðŸ›‘ Shutting down vier Agent...');
+    console.log('\nÃ°Å¸â€ºâ€˜ Shutting down vier Agent...');
     agent.stop();
     process.exit(0);
   };
@@ -248,7 +248,7 @@ async function main() {
   process.on('SIGTERM', shutdown);
 
   // Keep process alive
-  console.log('\nâœ… vier Agent is live. Press Ctrl+C to stop.\n');
+  console.log('\nÃ¢Å“â€¦ vier Agent is live. Press Ctrl+C to stop.\n');
 }
 
 // Run

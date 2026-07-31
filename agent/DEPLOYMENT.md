@@ -1,4 +1,4 @@
-﻿# vier Agent - Production Deployment Guide
+# vier Agent - Production Deployment Guide
 
 ## Quick Deploy to Railway (Recommended)
 
@@ -28,7 +28,7 @@ COSTON2_RPC=https://coston2-api.flare.network/ext/C/rpc
 WS_PORT=8080
 NODE_ENV=production
 AGENT_PRIVATE_KEY=<your-agent-wallet-private-key>
-ANTHROPIC_API_KEY=<your-anthropic-api-key>
+QWEN_API_KEY=<your-qwen-api-key>
 ```
 
 ### Step 3: Deploy
@@ -52,7 +52,7 @@ NEXT_PUBLIC_AGENT_WS_URL=wss://vier-agent.up.railway.app
 ### Step 1: Create New Web Service
 
 1. Go to [Render.com](https://render.com/)
-2. Click "New +" â†’ "Web Service"
+2. Click "New +" Ã¢â€ â€™ "Web Service"
 3. Connect your GitHub repository
 4. Select the `vier` repository
 
@@ -156,10 +156,10 @@ wscat -c wss://your-agent-url.railway.app
 
 After deployment:
 
-1. âœ… Update frontend environment variables
-2. âœ… Test WebSocket connection from browser
-3. âœ… Verify agent receives blockchain data
-4. âœ… Test full mint â†’ deposit â†’ agent analysis flow
+1. Ã¢Å“â€¦ Update frontend environment variables
+2. Ã¢Å“â€¦ Test WebSocket connection from browser
+3. Ã¢Å“â€¦ Verify agent receives blockchain data
+4. Ã¢Å“â€¦ Test full mint Ã¢â€ â€™ deposit Ã¢â€ â€™ agent analysis flow
 
 ---
 

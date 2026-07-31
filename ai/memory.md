@@ -1,4 +1,4 @@
-﻿# vier Protocol - AI Memory
+# vier Protocol - AI Memory
 
 ## What This Project Is
 
@@ -16,10 +16,10 @@ Autonomous AI Treasury Agent for B2B Commerce on Cronos. Freelancers mint invoic
 
 ```
 vier/
-â”œâ”€â”€ app/          # Next.js 15 + React 19 frontend
-â”œâ”€â”€ agent/        # TypeScript AI agent service (port 8080)
-â”œâ”€â”€ contracts/    # Solidity smart contracts (Foundry)
-â””â”€â”€ ai/           # Project memory (this folder)
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ app/          # Next.js 15 + React 19 frontend
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ agent/        # TypeScript AI agent service (port 8080)
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ contracts/    # Solidity smart contracts (Foundry)
+Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ ai/           # Project memory (this folder)
 ```
 
 ### Smart Contracts (Cronos Testnet):
@@ -31,7 +31,7 @@ vier/
 
 ### Tech Stack:
 - Frontend: Next.js 15, React 19, wagmi, viem, Tailwind
-- Agent: TypeScript, ethers.js, Anthropic SDK, WebSocket
+- Agent: TypeScript, ethers.js, Qwen chat API, WebSocket
 - Contracts: Solidity 0.8.24, Foundry
 - Network: Cronos Testnet (Chain ID 338)
 
