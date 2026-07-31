@@ -52,7 +52,7 @@ NEXT_PUBLIC_AGENT_WS_URL=wss://vier-agent.up.railway.app
 ### Step 1: Create New Web Service
 
 1. Go to [Render.com](https://render.com/)
-2. Click "New +" Ã¢â€ â€™ "Web Service"
+2. Click "New +" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ "Web Service"
 3. Connect your GitHub repository
 4. Select the `vier` repository
 
@@ -156,10 +156,10 @@ wscat -c wss://your-agent-url.railway.app
 
 After deployment:
 
-1. Ã¢Å“â€¦ Update frontend environment variables
-2. Ã¢Å“â€¦ Test WebSocket connection from browser
-3. Ã¢Å“â€¦ Verify agent receives blockchain data
-4. Ã¢Å“â€¦ Test full mint Ã¢â€ â€™ deposit Ã¢â€ â€™ agent analysis flow
+1. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Update frontend environment variables
+2. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Test WebSocket connection from browser
+3. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Verify agent receives blockchain data
+4. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Test full mint ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ deposit ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ agent analysis flow
 
 ---
 

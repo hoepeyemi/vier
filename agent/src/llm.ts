@@ -1,147 +1,251 @@
-// Qwen LLM integration for generating natural language explanations
+// vier LLM service - Qwen Cloud
+// Qwen-Max: complex reasoning and explanations
+// Qwen-Turbo: lightweight memory maintenance
 
 import { AnalysisResult, Strategy, AgentThought } from './types.js';
 import { STRATEGY_NAMES } from './constants.js';
 
-const QWEN_CONFIG = {
-  model: process.env.QWEN_MODEL || 'qwen-plus',
-  baseUrl: (process.env.QWEN_API_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1').replace(/\/$/, ''),
-  maxTokens: Number(process.env.QWEN_MAX_TOKENS || '300'),
-  timeoutMs: Number(process.env.QWEN_TIMEOUT_MS || '30000'),
-  maxRetries: Number(process.env.QWEN_MAX_RETRIES || '2'),
-};
+const QWEN_BASE_URL = (
+  process.env.QWEN_BASE_URL ||
+  'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+).replace(/\/$/, '');
+const QWEN_MAX_MODEL = process.env.QWEN_MAX_MODEL || 'qwen-max';
+const QWEN_TURBO_MODEL = process.env.QWEN_TURBO_MODEL || 'qwen-turbo';
+const TIMEOUT_MS = Number(process.env.QWEN_TIMEOUT_MS || '30000');
+const MAINTENANCE_TIMEOUT_MS = Number(process.env.QWEN_MAINTENANCE_TIMEOUT_MS || '20000');
+const QWEN_MAX_TOKENS = Number(process.env.QWEN_MAX_TOKENS || '300');
 
-type QwenChatResponse = {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
-  }>;
-  error?: {
-    message?: string;
-  };
-};
+const QWEN_EMBED_MODEL = process.env.QWEN_EMBED_MODEL || 'text-embedding-v2';
+export const QWEN_EMBED_DIMS = 1536;
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationName: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error(`${operationName} timed out after ${timeoutMs}ms`));
-    }, timeoutMs);
+interface QwenMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
 
-    promise
-      .then((result) => {
-        clearTimeout(timeout);
-        resolve(result);
-      })
-      .catch((error) => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-  });
+interface QwenResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+  error?: { message?: string };
+}
+
+interface QwenEmbedResponse {
+  data?: Array<{ index: number; embedding: number[] }>;
+  error?: { message?: string };
 }
 
 export class LLMService {
   private apiKey: string | null = null;
   private enabled = false;
-  private callCount = 0;
-  private lastCallTime = 0;
-  private rateLimitWindowMs = 60000;
-  private maxCallsPerWindow = 30;
+  private callTimestamps: number[] = [];
+  private readonly rateLimitWindowMs = 60000;
+  private readonly maxCallsPerWindow = Number(process.env.QWEN_MAX_CALLS_PER_MINUTE || '30');
 
   constructor(apiKey?: string) {
     if (apiKey) {
       this.apiKey = apiKey;
       this.enabled = true;
-      console.log(`Qwen LLM service initialized with model: ${QWEN_CONFIG.model}`);
+      console.log(`Qwen LLM service initialized: ${QWEN_MAX_MODEL} / ${QWEN_TURBO_MODEL}`);
     } else {
-      console.warn('No Qwen API key provided. Using template-based explanations.');
+      console.warn('No QWEN_API_KEY provided. Using template-based explanations.');
     }
   }
 
   private checkRateLimit(): boolean {
     const now = Date.now();
-    if (now - this.lastCallTime > this.rateLimitWindowMs) {
-      this.callCount = 0;
-      this.lastCallTime = now;
-    }
-    return this.callCount < this.maxCallsPerWindow;
+    const cutoff = now - this.rateLimitWindowMs;
+    this.callTimestamps = this.callTimestamps.filter((timestamp) => timestamp > cutoff);
+    return this.callTimestamps.length < this.maxCallsPerWindow;
   }
 
-  async generateExplanation(analysis: AnalysisResult): Promise<string> {
-    if (!this.enabled || !this.apiKey) {
-      return this.generateTemplateExplanation(analysis);
+  private async callQwen(
+    model: string,
+    messages: QwenMessage[],
+    maxTokens: number,
+    timeoutMs: number,
+  ): Promise<string> {
+    if (!this.apiKey) {
+      return '';
     }
 
-    if (!this.checkRateLimit()) {
-      console.warn('Qwen rate limit reached, using template');
-      return this.generateTemplateExplanation(analysis);
-    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const prompt = this.buildPrompt(analysis);
-      const apiCall = this.callQwen(prompt);
-      const response = await withTimeout(apiCall, QWEN_CONFIG.timeoutMs, 'Qwen generateExplanation');
-      this.callCount++;
+      const response = await fetch(`${QWEN_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: maxTokens,
+          temperature: 0.2,
+        }),
+        signal: controller.signal,
+      });
 
-      return response || this.generateTemplateExplanation(analysis);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Qwen LLM error, falling back to template:', errorMessage);
-      return this.generateTemplateExplanation(analysis);
+      const body = await response.text();
+      if (!response.ok) {
+        throw new Error(`Qwen API ${response.status}: ${body.slice(0, 200)}`);
+      }
+
+      const data = JSON.parse(body || '{}') as QwenResponse;
+      if (data.error) {
+        throw new Error(data.error.message || 'Qwen API error');
+      }
+      return data.choices?.[0]?.message?.content?.trim() || '';
+    } finally {
+      clearTimeout(timer);
     }
   }
 
-  private async callQwen(prompt: string): Promise<string> {
-    const response = await fetch(`${QWEN_CONFIG.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: QWEN_CONFIG.model,
-        max_tokens: QWEN_CONFIG.maxTokens,
-        temperature: 0.2,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a financial advisor agent analyzing tokenized invoices for yield optimization. Explain decisions in clear, concise language that a small business owner can understand. Keep explanations under 3 sentences. Be direct and actionable. Never use jargon without explanation. Focus on the why behind recommendations.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      }),
-    });
-
-    const payload = (await response.json().catch(() => ({}))) as QwenChatResponse;
-    if (!response.ok) {
-      throw new Error(payload.error?.message || `Qwen API returned HTTP ${response.status}`);
+  async generateExplanation(analysis: AnalysisResult, memoryContext?: string): Promise<string> {
+    if (!this.enabled || !this.apiKey || !this.checkRateLimit()) {
+      return this.generateTemplateExplanation(analysis);
     }
 
-    return payload.choices?.[0]?.message?.content?.trim() || '';
+    const systemParts = [
+      'You are vier, an autonomous AI treasury agent managing B2B invoice yield optimization.',
+      'Explain decisions in 2-3 clear sentences a small business owner can understand.',
+      'Focus on the why. Be direct. No jargon without explanation.',
+    ];
+
+    if (memoryContext) {
+      systemParts.push('', 'MEMORY CONTEXT (use to inform your explanation):', memoryContext);
+    }
+
+    const timestamp = Date.now();
+    this.callTimestamps.push(timestamp);
+
+    try {
+      const content = await this.callQwen(
+        QWEN_MAX_MODEL,
+        [
+          { role: 'system', content: systemParts.join('\n') },
+          { role: 'user', content: this.buildPrompt(analysis) },
+        ],
+        QWEN_MAX_TOKENS,
+        TIMEOUT_MS,
+      );
+      return content || this.generateTemplateExplanation(analysis);
+    } catch (error) {
+      const index = this.callTimestamps.lastIndexOf(timestamp);
+      if (index !== -1) {
+        this.callTimestamps.splice(index, 1);
+      }
+      console.error('Qwen explanation error, falling back to template:', error instanceof Error ? error.message : error);
+      return this.generateTemplateExplanation(analysis);
+    }
   }
 
   private buildPrompt(analysis: AnalysisResult): string {
-    return `Explain this invoice yield strategy decision to a business owner:
+    return `Explain this treasury decision:
+- Invoice #${analysis.tokenId} | Days until due: ${analysis.daysUntilDue}
+- Risk Score: ${analysis.riskScore}/100 | Payment Probability: ${analysis.paymentProbability}%
+- Strategy: ${STRATEGY_NAMES[analysis.currentStrategy]} -> ${STRATEGY_NAMES[analysis.recommendedStrategy]}
+- Confidence: ${analysis.confidence}% | Action: ${analysis.shouldAct ? 'EXECUTE CHANGE' : 'HOLD CURRENT'}
 
-Invoice Details:
-- Token ID: ${analysis.tokenId}
-- Days until payment due: ${analysis.daysUntilDue}
-- Risk Score: ${analysis.riskScore}/100 (higher = safer)
-- Payment Probability: ${analysis.paymentProbability}%
-- Current Strategy: ${STRATEGY_NAMES[analysis.currentStrategy]}
-- Recommended Strategy: ${STRATEGY_NAMES[analysis.recommendedStrategy]}
-- Confidence: ${analysis.confidence}%
-- Should Change: ${analysis.shouldAct ? 'Yes' : 'No'}
+Strategy APY reference: Hold=0%, Conservative=3.5%, Aggressive=7%
+Explain why we are ${analysis.shouldAct ? 'changing to' : 'keeping'} ${STRATEGY_NAMES[analysis.recommendedStrategy]}.`;
+  }
 
-Strategy Definitions:
-- Hold: Keep invoice without yield optimization (0% APY)
-- Conservative: Low-risk lending pools (3-4% APY)
-- Aggressive: Higher-yield opportunities (6-8% APY)
+  async condenseMemories(episodeContents: string[]): Promise<string | null> {
+    if (!this.enabled || !this.apiKey || episodeContents.length === 0) {
+      return null;
+    }
 
-Explain why we're ${analysis.shouldAct ? 'changing to' : 'keeping'} the ${STRATEGY_NAMES[analysis.recommendedStrategy]} strategy in 2-3 sentences.`;
+    try {
+      const content = await this.callQwen(
+        QWEN_TURBO_MODEL,
+        [
+          {
+            role: 'system',
+            content: 'You are a financial memory distiller. Analyze treasury agent decision logs and extract exactly one actionable rule of thumb. Output one sentence starting with "When", "Always", or "Avoid". Be specific.',
+          },
+          {
+            role: 'user',
+            content: `Distill these ${episodeContents.length} logs into one rule:\n\n${episodeContents.map((entry, index) => `${index + 1}. ${entry}`).join('\n')}`,
+          },
+        ],
+        100,
+        MAINTENANCE_TIMEOUT_MS,
+      );
+
+      return content || null;
+    } catch (error) {
+      console.error('Qwen memory condensation error:', error instanceof Error ? error.message : error);
+      return null;
+    }
+  }
+
+  async evaluateMemoryRelevance(memoryContent: string): Promise<number> {
+    if (!this.enabled || !this.apiKey) {
+      return 0.5;
+    }
+
+    try {
+      const content = await this.callQwen(
+        QWEN_TURBO_MODEL,
+        [
+          {
+            role: 'system',
+            content: 'Rate how relevant this treasury memory is for future AI decisions. Reply with only a number 0-10 (0=obsolete, 10=highly relevant).',
+          },
+          { role: 'user', content: `Rate (0-10): "${memoryContent}"` },
+        ],
+        5,
+        10000,
+      );
+
+      const score = Number.parseFloat(content);
+      return Number.isNaN(score) ? 0.5 : Math.min(10, Math.max(0, score)) / 10;
+    } catch {
+      return 0.5;
+    }
+  }
+
+  async embedText(text: string): Promise<number[] | null> {
+    if (!this.enabled || !this.apiKey) {
+      return null;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch(`${QWEN_BASE_URL}/embeddings`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: QWEN_EMBED_MODEL, input: text }),
+        signal: controller.signal,
+      });
+
+      const body = await response.text();
+      if (!response.ok) {
+        throw new Error(`Qwen embed API ${response.status}: ${body.slice(0, 120)}`);
+      }
+
+      const data = JSON.parse(body || '{}') as QwenEmbedResponse;
+      if (data.error) {
+        throw new Error(data.error.message || 'Qwen embedding API error');
+      }
+      return data.data?.[0]?.embedding ?? null;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn('[LLM] embedText failed, semantic fallback should be used:', message.split('\n')[0].slice(0, 80));
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  isEnabled(): boolean {
+    return this.enabled;
   }
 
   private generateTemplateExplanation(analysis: AnalysisResult): string {
@@ -149,28 +253,22 @@ Explain why we're ${analysis.shouldAct ? 'changing to' : 'keeping'} the ${STRATE
     const current = STRATEGY_NAMES[analysis.currentStrategy];
 
     if (!analysis.shouldAct) {
-      if (analysis.currentStrategy === analysis.recommendedStrategy) {
-        return `Maintaining ${current} strategy. Current conditions remain optimal for this approach ` +
-          `with ${analysis.confidence}% confidence based on ${analysis.daysUntilDue} days until due ` +
-          `and ${analysis.paymentProbability}% payment probability.`;
-      }
-      return `No strategy change recommended at this time. While ${strategy} might offer benefits, ` +
-        `confidence level (${analysis.confidence}%) is below our threshold for strategy changes.`;
+      return `Maintaining ${current} strategy. Conditions remain optimal with ${analysis.confidence}% confidence ` +
+        `(${analysis.daysUntilDue}d until due, ${analysis.paymentProbability}% payment probability).`;
     }
 
     if (analysis.recommendedStrategy === Strategy.Aggressive) {
-      return `Upgrading to Aggressive strategy for higher yields (6-8% APY). ` +
-        `Strong fundamentals: ${analysis.riskScore}/100 risk score, ${analysis.paymentProbability}% payment probability, ` +
-        `and ${analysis.daysUntilDue} days of yield accumulation time make this a confident move.`;
-    } else if (analysis.recommendedStrategy === Strategy.Conservative) {
-      return `Moving to Conservative strategy for balanced risk-reward (3-4% APY). ` +
-        `Moderate conditions suggest stable yield generation while protecting capital. ` +
-        `${analysis.confidence}% confidence in this recommendation.`;
-    } else {
-      return `Switching to Hold strategy to protect capital. ` +
-        `Current risk metrics (${analysis.riskScore}/100 risk, ${analysis.paymentProbability}% payment probability) ` +
-        `suggest caution until conditions improve.`;
+      return `Upgrading to Aggressive (7% APY). Strong fundamentals: ${analysis.riskScore}/100 risk, ` +
+        `${analysis.paymentProbability}% payment probability, ${analysis.daysUntilDue}d yield window.`;
     }
+
+    if (analysis.recommendedStrategy === Strategy.Conservative) {
+      return `Moving to Conservative (3.5% APY). Moderate conditions favor stable yield over capital risk. ` +
+        `${analysis.confidence}% confidence.`;
+    }
+
+    return `Switching to Hold. Risk metrics (${analysis.riskScore}/100, ${analysis.paymentProbability}% payment) ` +
+      'suggest protecting capital until conditions improve.';
   }
 
   async generateThinkingStream(analysis: AnalysisResult): Promise<AgentThought[]> {
