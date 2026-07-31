@@ -1,0 +1,2 @@
+// Deprecated compatibility shim. Verify Coston2 contracts from contracts/deployments/coston2.json in Coston2 Explorer.
+console.log("Use Coston2 Explorer for source verification: https://coston2-explorer.flare.network");

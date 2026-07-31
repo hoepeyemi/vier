@@ -1,0 +1,1 @@
+export { createCoston2Transport, getCoston2RpcUrls } from "./coston2-rpc"

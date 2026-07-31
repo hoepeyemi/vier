@@ -1,0 +1,25 @@
+{
+  "name": "vier-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "hardhat compile",
+    "clean": "hardhat clean",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network hardhat",
+    "deploy:factory": "hardhat run scripts/deploy-factory.js --network hardhat",
+    "deploy:mock-aave": "hardhat run scripts/deploy-mock-aave.js --network hardhat",
+    "deploy:multichain": "hardhat run scripts/deploy-multichain.js --network coston2",
+    "deploy:coston2": "hardhat run scripts/deploy-coston2.js --network coston2",
+    "deploy:flare-coston2": "npm run deploy:coston2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@openzeppelin/contracts": "^5.2.0",
+    "@pythnetwork/pyth-sdk-solidity": "^4.0.0",
+    "chai": "^4.5.0",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.19"
+  }
+}

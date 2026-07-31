@@ -1,0 +1,34 @@
+{
+  "name": "vier",
+  "version": "1.0.0",
+  "description": "Turn invoices into yield automatically on Flare Coston2.",
+  "private": true,
+  "workspaces": [
+    "app",
+    "agent",
+    "contracts"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel run dev",
+    "dev:app": "pnpm --filter vier-app dev",
+    "dev:agent": "pnpm --filter vier-agent dev",
+    "build": "pnpm --parallel run build",
+    "build:contracts": "npm --prefix contracts run build",
+    "docker:build:agent": "docker build -f Dockerfile.mcp -t vier-agent .",
+    "docker:build": "pnpm run docker:build:agent",
+    "test": "pnpm test:all",
+    "test:all": "pnpm test:contracts && pnpm test:agent",
+    "test:contracts": "npm --prefix contracts run test",
+    "test:agent": "pnpm --filter vier-agent test",
+    "typecheck": "pnpm --filter vier-app exec tsc --noEmit && pnpm --filter vier-agent exec tsc --noEmit",
+    "lint": "pnpm --filter vier-app lint && npm --prefix contracts run build",
+    "deploy:local": "npm --prefix contracts run deploy:local",
+    "deploy:factory": "npm --prefix contracts run deploy:factory",
+    "deploy:coston2": "npm --prefix contracts run deploy:coston2",
+    "deploy:flare-coston2": "npm run deploy:coston2",
+    "docker:build:fce": "docker build --no-cache -f Dockerfile.fce -t vier-fce ."
+  },
+  "devDependencies": {
+    "puppeteer": "^24.34.0"
+  }
+}

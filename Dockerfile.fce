@@ -1,0 +1,102 @@
+# ============================================================
+# Flare Compute Extension (FCE) — vier AI Agent
+# ============================================================
+# This image is designed to run inside a Flare Confidential
+# Compute (FCC) Trusted Execution Environment (TEE).
+#
+# Key FCE requirements met by this image:
+#   • Reproducible build: deterministic npm/pnpm lock-file install
+#   • Minimal attack surface: Alpine base, production deps only
+#   • TEE identity: keccak256(sha256(this image digest) || chainId)
+#     is registered in MockFDCVerifier and verified by AgentRouter
+#   • Signed payloads: agent uses FCE_IDENTITY_KEY (injected by
+#     Flare FCC at runtime) to sign decision payloads before
+#     calling AgentRouter.executeStrategyWithAttestation()
+#
+# Build (reproducible — use --no-cache for the image digest to match):
+#   docker build --no-cache -f Dockerfile.fce \
+#     --build-arg FCE_IMAGE_HASH=0x$(docker inspect ... | sha256sum) \
+#     -t vier-fce .
+#
+# The sha256 of the final image becomes the teeId seed registered
+# with MockFDCVerifier on Flare Coston2.
+# ============================================================
+
+FROM node:20-alpine AS base
+
+RUN npm install -g pnpm@10
+
+WORKDIR /repo
+ENV CI=true
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY app/package.json ./app/package.json
+COPY agent/package.json ./agent/package.json
+COPY contracts/package.json ./contracts/package.json
+
+RUN pnpm install --frozen-lockfile --filter vier-agent...
+
+COPY . .
+
+# Ensure deployments dir always exists so COPY --from=base in the runner stage
+# never fails (it may not exist before the first pnpm deploy:coston2 run).
+RUN mkdir -p /repo/contracts/deployments
+
+WORKDIR /repo/agent
+
+RUN pnpm build
+
+# ── Production runner ────────────────────────────────────────
+FROM node:20-alpine AS runner
+
+RUN npm install -g pnpm@10
+
+WORKDIR /app/agent
+
+# ── Standard runtime env ─────────────────────────────────────
+ENV NODE_ENV=production
+ENV WS_PORT=8080
+
+# ── Flare FCC / Coston2 configuration ────────────────────────
+# Flare Coston2 testnet (114). Change to 14 for Flare mainnet.
+ENV FLARE_CHAIN_ID=114
+
+# RPC endpoint for Flare Coston2
+ENV RPC_URL=https://coston2-api.flare.network/ext/C/rpc
+ENV DEPLOYMENT_NETWORK=coston2
+
+# TEE attestation mode: "true" causes the agent to sign payloads
+# and call executeStrategyWithAttestation() instead of recordDecision()
+ENV FCE_TEE_MODE=true
+
+# FCE_IMAGE_HASH is the keccak256 of the Docker image digest.
+# Passed as a build arg so the image can compute its own teeId.
+# In production Flare FCC this is provided by the attestation infrastructure.
+ARG FCE_IMAGE_HASH=0x0000000000000000000000000000000000000000000000000000000000000000
+ENV FCE_IMAGE_HASH=${FCE_IMAGE_HASH}
+
+# FLARE_FCE_IDENTITY_KEY is injected at runtime by Flare FCC infrastructure.
+# In demo mode the agent falls back to AGENT_PRIVATE_KEY.
+# Never bake a real private key into this image.
+# ENV FLARE_FCE_IDENTITY_KEY=<injected by Flare FCC at runtime>
+
+# FLARE_TEE_ID overrides the computed teeId (optional).
+# If unset, the agent computes: keccak256(FCE_IMAGE_HASH || FLARE_CHAIN_ID)
+# ENV FLARE_TEE_ID=<set by deploy-coston2.js output>
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /app/
+COPY app/package.json /app/app/package.json
+COPY agent/package.json /app/agent/package.json
+COPY contracts/package.json /app/contracts/package.json
+
+RUN pnpm install --prod --frozen-lockfile --filter vier-agent...
+
+COPY --from=base /repo/agent/dist ./dist
+COPY --from=base /repo/contracts/deployments /app/contracts/deployments
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1 || exit 1
+
+CMD ["node", "dist/index.js"]
