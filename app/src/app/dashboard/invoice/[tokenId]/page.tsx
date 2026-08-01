@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 import { useChainId } from "wagmi"
 import { getChainMeta } from "@/lib/wagmi"
@@ -48,6 +48,7 @@ function InvoiceDetailContent() {
     isDepositing,
     isDepositConfirming,
     isDepositSuccess,
+    depositHash,
     resetApprove,
   } = useDepositToVault()
 
@@ -64,19 +65,30 @@ function InvoiceDetailContent() {
     queueMicrotask(() => setPendingDeposit(null))
   }, [isApproveSuccess, pendingDeposit, depositToVault, tokenId])
 
+  const handledDepositHashRef = useRef<string | null>(null)
+
   useEffect(() => {
-    if (isDepositSuccess) {
-      toast.success("Invoice deposited for yield", {
-        description: "The invoice is now active in the yield vault.",
-      })
-      queueMicrotask(() => {
-        setShowDeposit(false)
-        setPendingDeposit(null)
-      })
-      resetApprove()
-      refetchDeposit()
+    if (!isDepositSuccess || !depositHash) {
+      return
     }
-  }, [isDepositSuccess, resetApprove, refetchDeposit])
+
+    const hashKey = depositHash.toString()
+    if (handledDepositHashRef.current === hashKey) {
+      return
+    }
+
+    handledDepositHashRef.current = hashKey
+    toast.success("Invoice deposited for yield", {
+      id: `deposit-${hashKey}`,
+      description: "The invoice is now active in the yield vault.",
+    })
+    queueMicrotask(() => {
+      setShowDeposit(false)
+      setPendingDeposit(null)
+    })
+    resetApprove()
+    refetchDeposit()
+  }, [isDepositSuccess, depositHash, resetApprove, refetchDeposit])
 
   const handleDeposit = (principal: string, selectedStrategy: number) => {
     if (tokenId === undefined) return
