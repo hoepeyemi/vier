@@ -1,4 +1,4 @@
-﻿const hre = require("hardhat");
+const hre = require("hardhat");
 const { mergeDeploymentState } = require("./deployment-state");
 
 async function main() {
@@ -18,9 +18,9 @@ async function main() {
 
   let asset = process.env.MOCK_AAVE_ASSET || hre.ethers.ZeroAddress;
   if (asset === hre.ethers.ZeroAddress && process.env.MOCK_AAVE_WRAP_NATIVE === "true") {
-    const wrappedMnt = await WrappedC2FLR.deploy();
-    await wrappedMnt.waitForDeployment();
-    asset = await wrappedMnt.getAddress();
+    const wrappedC2FLR = await WrappedC2FLR.deploy();
+    await wrappedC2FLR.waitForDeployment();
+    asset = await wrappedC2FLR.getAddress();
     console.log("WrappedC2FLR deployed at:", asset);
   }
 
@@ -38,7 +38,7 @@ async function main() {
 
     mergeDeploymentState("hardhat", {
       mockAavePool: await pool.getAddress(),
-      wrappedMnt: process.env.MOCK_AAVE_WRAP_NATIVE === "true" ? asset : undefined,
+      wrappedC2FLR: process.env.MOCK_AAVE_WRAP_NATIVE === "true" ? asset : undefined,
       mockAaveAsset: asset,
       mockAToken: await pool.getAToken(asset),
     });

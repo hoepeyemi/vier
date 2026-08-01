@@ -1,5 +1,6 @@
 require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-chai-matchers");
+require("@nomicfoundation/hardhat-verify");
 
 const fs = require("fs");
 const path = require("path");
@@ -60,7 +61,24 @@ module.exports = {
       gasPrice: "auto",
     },
   },
-  paths: {
+  etherscan: {
+    apiKey: {
+      coston2: process.env.ETHERSCAN_API_KEY || "blockscout",
+    },
+    customChains: [
+      {
+        network: "coston2",
+        chainId: 114,
+        urls: {
+          apiURL: "https://coston2-explorer.flare.network/api",
+          browserURL: "https://coston2-explorer.flare.network",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: false,
+  },  paths: {
     sources: "./src",
     tests: "./test",
     cache: "./cache",
