@@ -5,16 +5,28 @@ const QUICKBOOKS_BASE_URL = process.env.QUICKBOOKS_ENVIRONMENT === "production"
   ? "https://quickbooks.api.intuit.com"
   : "https://sandbox-quickbooks.api.intuit.com"
 
-const OAUTH_BASE_URL = "https://appcenter.intuit.com/connect/oauth2"
+const OAUTH_TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
 
-// OAuth endpoints
-export const QUICKBOOKS_AUTH_URL = `${OAUTH_BASE_URL}/v1/tokens/bearer`
+export const QUICKBOOKS_AUTH_URL = OAUTH_TOKEN_URL
 export const QUICKBOOKS_AUTHORIZE_URL = "https://appcenter.intuit.com/connect/oauth2"
 
-// Scopes required for invoice access
 export const QUICKBOOKS_SCOPES = [
   "com.intuit.quickbooks.accounting",
 ].join(" ")
+
+function sanitizeQuickBooksLog(value: string): string {
+  return value
+    .replace(/"access_token"\s*:\s*"[^"]+"/gi, '"access_token":"[redacted]"')
+    .replace(/"refresh_token"\s*:\s*"[^"]+"/gi, '"refresh_token":"[redacted]"')
+    .replace(/access_token=[^&\s]+/gi, 'access_token=[redacted]')
+    .replace(/refresh_token=[^&\s]+/gi, 'refresh_token=[redacted]')
+    .replace(/client_secret=[^&\s]+/gi, 'client_secret=[redacted]')
+    .replace(/code=[^&\s]+/gi, 'code=[redacted]')
+}
+
+function logQuickBooksClient(message: string, data?: Record<string, unknown>) {
+  console.log(`[quickbooks:client] ${message}`, data || "")
+}
 
 export interface QuickBooksTokens {
   accessToken: string
@@ -55,7 +67,6 @@ export interface QuickBooksInvoice {
   }>
 }
 
-// Generate OAuth authorization URL
 export function getAuthorizationUrl(state: string): string {
   const clientId = process.env.QUICKBOOKS_CLIENT_ID
   const redirectUri = process.env.QUICKBOOKS_REDIRECT_URI
@@ -72,10 +83,16 @@ export function getAuthorizationUrl(state: string): string {
     state,
   })
 
+  logQuickBooksClient("authorization URL generated", {
+    environment: process.env.QUICKBOOKS_ENVIRONMENT || "sandbox",
+    redirectUri,
+    scope: QUICKBOOKS_SCOPES,
+    hasClientId: Boolean(clientId),
+  })
+
   return `${QUICKBOOKS_AUTHORIZE_URL}?${params.toString()}`
 }
 
-// Exchange authorization code for tokens
 export async function exchangeCodeForTokens(
   code: string,
   realmId: string
@@ -89,6 +106,15 @@ export async function exchangeCodeForTokens(
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
+
+  logQuickBooksClient("token exchange request", {
+    url: QUICKBOOKS_AUTH_URL,
+    redirectUri,
+    hasClientId: Boolean(clientId),
+    hasClientSecret: Boolean(clientSecret),
+    hasCode: Boolean(code),
+    realmId,
+  })
 
   const response = await fetch(QUICKBOOKS_AUTH_URL, {
     method: "POST",
@@ -104,12 +130,21 @@ export async function exchangeCodeForTokens(
     }),
   })
 
+  logQuickBooksClient("token exchange response", { status: response.status, ok: response.ok })
+
   if (!response.ok) {
-    const error = await response.text()
+    const error = sanitizeQuickBooksLog(await response.text())
+    logQuickBooksClient("token exchange error body", { error: error.slice(0, 500) })
     throw new Error(`Token exchange failed: ${error}`)
   }
 
   const data = await response.json()
+  logQuickBooksClient("token exchange parsed", {
+    hasAccessToken: Boolean(data.access_token),
+    hasRefreshToken: Boolean(data.refresh_token),
+    expiresIn: data.expires_in,
+    tokenType: data.token_type,
+  })
 
   return {
     accessToken: data.access_token,
@@ -121,7 +156,6 @@ export async function exchangeCodeForTokens(
   }
 }
 
-// Refresh access token
 export async function refreshAccessToken(
   refreshToken: string
 ): Promise<QuickBooksTokens> {
@@ -133,6 +167,13 @@ export async function refreshAccessToken(
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
+
+  logQuickBooksClient("refresh token request", {
+    url: QUICKBOOKS_AUTH_URL,
+    hasClientId: Boolean(clientId),
+    hasClientSecret: Boolean(clientSecret),
+    hasRefreshToken: Boolean(refreshToken),
+  })
 
   const response = await fetch(QUICKBOOKS_AUTH_URL, {
     method: "POST",
@@ -147,8 +188,11 @@ export async function refreshAccessToken(
     }),
   })
 
+  logQuickBooksClient("refresh token response", { status: response.status, ok: response.ok })
+
   if (!response.ok) {
-    const error = await response.text()
+    const error = sanitizeQuickBooksLog(await response.text())
+    logQuickBooksClient("refresh token error body", { error: error.slice(0, 500) })
     throw new Error(`Token refresh failed: ${error}`)
   }
 
@@ -159,12 +203,11 @@ export async function refreshAccessToken(
     refreshToken: data.refresh_token,
     expiresIn: data.expires_in,
     tokenType: data.token_type,
-    realmId: "", // Will need to be preserved from original token
+    realmId: "",
     expiresAt: Date.now() + data.expires_in * 1000,
   }
 }
 
-// Fetch invoices from QuickBooks
 export async function fetchInvoices(
   accessToken: string,
   realmId: string,
@@ -175,7 +218,6 @@ export async function fetchInvoices(
 ): Promise<QuickBooksInvoice[]> {
   const { status = "open", limit = 100 } = options || {}
 
-  // Build query
   let query = `SELECT * FROM Invoice`
 
   if (status === "open") {
@@ -189,6 +231,15 @@ export async function fetchInvoices(
   const encodedQuery = encodeURIComponent(query)
   const url = `${QUICKBOOKS_BASE_URL}/v3/company/${realmId}/query?query=${encodedQuery}`
 
+  logQuickBooksClient("fetch invoices request", {
+    environment: process.env.QUICKBOOKS_ENVIRONMENT || "sandbox",
+    realmId,
+    status,
+    limit,
+    query,
+    hasAccessToken: Boolean(accessToken),
+  })
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -196,16 +247,20 @@ export async function fetchInvoices(
     },
   })
 
+  logQuickBooksClient("fetch invoices response", { status: response.status, ok: response.ok })
+
   if (!response.ok) {
-    const error = await response.text()
+    const error = sanitizeQuickBooksLog(await response.text())
+    logQuickBooksClient("fetch invoices error body", { error: error.slice(0, 500) })
     throw new Error(`Failed to fetch invoices: ${error}`)
   }
 
   const data = await response.json()
-  return data.QueryResponse?.Invoice || []
+  const invoices = data.QueryResponse?.Invoice || []
+  logQuickBooksClient("fetch invoices parsed", { count: invoices.length })
+  return invoices
 }
 
-// Fetch a single invoice by ID
 export async function fetchInvoice(
   accessToken: string,
   realmId: string,
@@ -213,6 +268,12 @@ export async function fetchInvoice(
 ): Promise<QuickBooksInvoice | null> {
   const url = `${QUICKBOOKS_BASE_URL}/v3/company/${realmId}/invoice/${invoiceId}`
 
+  logQuickBooksClient("fetch invoice request", {
+    realmId,
+    invoiceId,
+    hasAccessToken: Boolean(accessToken),
+  })
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -220,11 +281,14 @@ export async function fetchInvoice(
     },
   })
 
+  logQuickBooksClient("fetch invoice response", { status: response.status, ok: response.ok })
+
   if (!response.ok) {
     if (response.status === 404) {
       return null
     }
-    const error = await response.text()
+    const error = sanitizeQuickBooksLog(await response.text())
+    logQuickBooksClient("fetch invoice error body", { error: error.slice(0, 500) })
     throw new Error(`Failed to fetch invoice: ${error}`)
   }
 
@@ -232,9 +296,7 @@ export async function fetchInvoice(
   return data.Invoice || null
 }
 
-// Create commitment hash from invoice data
 export function createInvoiceCommitmentData(invoice: QuickBooksInvoice): string {
-  // Create a deterministic string from invoice data
   return JSON.stringify({
     id: invoice.Id,
     docNumber: invoice.DocNumber,
@@ -245,7 +307,6 @@ export function createInvoiceCommitmentData(invoice: QuickBooksInvoice): string 
   })
 }
 
-// Format invoice for frontend display
 export function formatInvoiceForDisplay(invoice: QuickBooksInvoice) {
   return {
     id: invoice.Id,
@@ -258,16 +319,15 @@ export function formatInvoiceForDisplay(invoice: QuickBooksInvoice) {
     txnDate: invoice.TxnDate,
     isPaid: invoice.Balance === 0,
     email: invoice.BillEmail?.Address,
-    lineItems: invoice.Line.filter((l) => l.DetailType === "SalesItemLineDetail").map((l) => ({
-      description: l.Description,
-      amount: l.Amount,
-      quantity: l.SalesItemLineDetail?.Qty,
-      unitPrice: l.SalesItemLineDetail?.UnitPrice,
+    lineItems: invoice.Line.filter((line) => line.DetailType === "SalesItemLineDetail").map((line) => ({
+      description: line.Description,
+      amount: line.Amount,
+      quantity: line.SalesItemLineDetail?.Qty,
+      unitPrice: line.SalesItemLineDetail?.UnitPrice,
     })),
   }
 }
 
-// Simple in-memory token storage (for demo - use database in production)
 const tokenStore = new Map<string, QuickBooksTokens>()
 
 export function storeTokens(userId: string, tokens: QuickBooksTokens) {
