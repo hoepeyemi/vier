@@ -542,7 +542,7 @@ export class BlockchainService {
   getDataSourceInfo(): { oracle: string; yield: string } {
     return {
       oracle: (this.flareContractRegistry || this.ftsoV2 || this.ftsoV2AddressFallback) ? 'Flare FTSOv2 (Live)' : 'Mock Oracle (Simulated)',
-      yield: this.aaveYieldSource ? 'Aave V3 (Real DeFi)' : 'Simulated Yield',
+      yield: this.aaveYieldSource ? 'Aave V3 (Real DeFi)' : 'Testnet mode — YieldVault active, APY simulated',
     };
   }
 

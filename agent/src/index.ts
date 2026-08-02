@@ -1,4 +1,4 @@
-// vier Agent Service Entry Point
+﻿// vier Agent Service Entry Point
 
 import 'dotenv/config';
 import fs from 'node:fs';
@@ -201,25 +201,25 @@ async function main() {
   const RPC_URL = await selectWorkingRpcUrl(COSTON2_RPC_FALLBACKS);
 
   console.log('');
-  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”');
-  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜ Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€” Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â');
-  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â    Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â ');
-  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”    Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”  Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢Â  ');
-  console.log('  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜     Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€”   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€¢Å¡Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜  Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   Ã¢â€“Ë†Ã¢â€“Ë†Ã¢â€¢â€˜   ');
-  console.log('  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â     Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â   Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â    Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â  Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â   Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢Â   ');
+  console.log('  ____   ____  ________  _______  ');
+  console.log('  |    \\ |    ||    ____||   __  \\ ');
+  console.log('  |     \\|    ||   |___  |  |__|  |');
+  console.log('  |  |\\ \\    | |    ___| |     __/ ');
+  console.log('  |__| \\_____|  |______| |__|       ');
+  console.log('  vier - AI-Managed B2B Payments on Flare');
   console.log('');
 
   // Validate environment before starting
   const validation = validateEnvironment(ADDRESSES);
 
   if (validation.warnings.length > 0) {
-    console.log('Ã¢Å¡Â Ã¯Â¸Â  Environment Warnings:');
+    console.log('[WARN] Environment Warnings:');
     validation.warnings.forEach((w) => console.log(`   - ${w}`));
     console.log('');
   }
 
   if (!validation.valid) {
-    console.error('Ã¢ÂÅ’ Environment Validation Failed:');
+    console.error('[ERROR] Environment Validation Failed:');
     validation.errors.forEach((e) => console.error(`   - ${e}`));
     console.error('');
     console.error('Please configure the required environment variables.');
@@ -229,26 +229,26 @@ async function main() {
   console.log('  x402 AI-Managed B2B Payments');
   console.log('');
   console.log('='.repeat(60));
-  console.log(`  Ã°Å¸â€œÂ¡ RPC:     ${RPC_URL}`);
-  console.log(`  Ã°Å¸â€Å’ WS:      ws://localhost:${WS_PORT}`);
-  console.log(`  Ã°Å¸â€â€˜ Wallet:  ${PRIVATE_KEY ? 'Ã¢Å“â€¦ Configured' : 'Ã¢ÂÅ’ Read-only mode'}`);
-  console.log(`  Ã°Å¸Â¤â€“ LLM:     ${QWEN_API_KEY ? 'Ã¢Å“â€¦ AI (Real)' : 'Ã¢Å¡Â¡ Template mode'}`);
-  console.log(`  Ã°Å¸â€Â FCE TEE: ${FCE_TEE_MODE ? 'Ã¢Å“â€¦ Flare Confidential Compute' : 'Ã¢Å¡Â Ã¯Â¸Â  Standard mode'}`);
+  console.log(`  [RPC]    ${RPC_URL}`);
+  console.log(`  [WS]     ws://localhost:${WS_PORT}`);
+  console.log(`  [WALLET] ${PRIVATE_KEY ? '✅ Configured' : '❌ Read-only mode'}`);
+  console.log(`  [LLM]    ${QWEN_API_KEY ? '✅ AI (Real)' : '⚡ Template mode'}`);
+  console.log(`  [TEE]    ${FCE_TEE_MODE ? '✅ Flare Confidential Compute' : '⚠️ Standard mode'}`);
   console.log('='.repeat(60));
   console.log('');
   console.log('  Data Sources:');
   console.log('  Oracle: ' + (ADDRESSES.flareContractRegistry ? 'Flare FTSOv2 via Contract Registry' : 'Mock Oracle (Simulated)'));
-  console.log(`  Ã°Å¸â€™Â° Yield: ${ADDRESSES.aaveYieldSource ? 'Ã¢Å“â€¦ Flare Vault (Real DeFi)' : 'Ã¢Å¡Â Ã¯Â¸Â  Simulated Yield'}`);
+  console.log(`  [YIELD]  ${ADDRESSES.aaveYieldSource ? '✅ Flare Vault (Real DeFi)' : 'ℹ️ Testnet mode — YieldVault active, APY simulated'}`);
   if (!isProduction) {
     console.log('');
-    console.log('  Ã¢Å¡Â Ã¯Â¸Â  Running with SIMULATED data for demo.');
+    console.log('  ⚠️ Running with SIMULATED data for demo.');
     console.log('  Set FTSO_V2_ADDRESS to override the Flare Coston2 FTSOv2 default.');
   }
   console.log('='.repeat(60));
 
   // Validate contract addresses
   if (ADDRESSES.invoiceNFT === ZERO_ADDRESS) {
-    console.warn('\nÃ¢Å¡Â Ã¯Â¸Â  Contract addresses not configured.');
+    console.warn('⚠️ Contract addresses not configured.');
     console.log('   Set environment variables after deployment.\n');
   }
 
@@ -270,11 +270,11 @@ async function main() {
   await agent.start();
 
   // Health check is now built into WebSocket server (same port)
-  console.log(`  Ã°Å¸ÂÂ¥ Health: http://localhost:${WS_PORT}/health`);
+  console.log(`  [HEALTH] http://localhost:${WS_PORT}/health`);
 
   // Handle graceful shutdown
   const shutdown = () => {
-    console.log('\nÃ°Å¸â€ºâ€˜ Shutting down vier Agent...');
+    console.log('🛑 Shutting down vier Agent...');
     agent.stop();
     process.exit(0);
   };
@@ -283,7 +283,7 @@ async function main() {
   process.on('SIGTERM', shutdown);
 
   // Keep process alive
-  console.log('\nÃ¢Å“â€¦ vier Agent is live. Press Ctrl+C to stop.\n');
+  console.log('✅ vier Agent is live. Press Ctrl+C to stop.');
 }
 
 // Run

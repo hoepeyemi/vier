@@ -409,7 +409,15 @@ export class VierAgent {
     }
     try {
       // Trigger FTSOv2 price read → FtsoOracle writes updated risk to InvoiceNFT before we read it.
-      await this.blockchain.assessAndUpdateRisk(tokenId);
+      const riskUpdated = await this.blockchain.assessAndUpdateRisk(tokenId);
+      if (!riskUpdated) {
+        this.broadcastThought({
+          type: 'thinking',
+          tokenId,
+          message: `[oracle] Using cached risk score for #${tokenId} (FTSOv2 update skipped — no signer, no oracle, or stale price)`,
+          timestamp: Date.now(),
+        });
+      }
 
       // Fetch invoice and deposit data
       const [invoice, deposit] = await Promise.all([

@@ -51,7 +51,7 @@ const addresses: Partial<Record<ChainId, ContractAddresses>> = {
     privacyRegistry: (process.env.NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY || process.env.NEXT_PUBLIC_PRIVACY_REGISTRY_ADDRESS || "0xc08B41ACeD118665d08b9517c812db483245791C") as `0x${string}`,
     ftsoV2: (process.env.NEXT_PUBLIC_COSTON2_FTSO_V2 || "0xC4e9c78EA53db782E28f28Fdf80BaF59336B304d") as `0x${string}`,
     ftsoOracle: (process.env.NEXT_PUBLIC_COSTON2_FTSO_ORACLE || "0xCc351f611b89607e25ab124D3abF58A83ADf94a9") as `0x${string}`,
-    aaveYieldSource: (process.env.NEXT_PUBLIC_COSTON2_AAVE_YIELD_SOURCE || "0xfDa39D8a75391aAec43BB54a774bf6F03A0033b6") as `0x${string}`,
+    aaveYieldSource: (process.env.NEXT_PUBLIC_COSTON2_AAVE_YIELD_SOURCE || ZERO) as `0x${string}`,
     mockFDCVerifier: (process.env.NEXT_PUBLIC_COSTON2_MOCK_FDC_VERIFIER || "0x4FE685b35c3A1B9b297eF7D1465C49b5d859daE9") as `0x${string}`,
   },
   [CHAIN_IDS.FLARE]: { ...emptyAddresses },
@@ -95,23 +95,23 @@ export const CHAIN_META: Partial<Record<ChainId, ChainMeta>> = {
     gasLabel: "~$0", explorerUrl: "https://coston2-explorer.flare.network", nativeCurrency: "C2FLR",
   },
   [CHAIN_IDS.ETHEREUM]: {
-    name: "Ethereum", shortName: "ETH", hasAave: true, hasFtso: true,
+    name: "Ethereum", shortName: "ETH", hasAave: true, hasFtso: false,
     gasLabel: "~$2-10", explorerUrl: "https://etherscan.io", nativeCurrency: "ETH",
   },
   [CHAIN_IDS.BSC]: {
-    name: "BNB Chain", shortName: "BSC", hasAave: true, hasFtso: true,
+    name: "BNB Chain", shortName: "BSC", hasAave: true, hasFtso: false,
     gasLabel: "~$0.05", explorerUrl: "https://bscscan.com", nativeCurrency: "BNB",
   },
   [CHAIN_IDS.BASE]: {
-    name: "Base", shortName: "BASE", hasAave: true, hasFtso: true,
+    name: "Base", shortName: "BASE", hasAave: true, hasFtso: false,
     gasLabel: "~$0.01", explorerUrl: "https://basescan.org", nativeCurrency: "ETH",
   },
   [CHAIN_IDS.ARBITRUM]: {
-    name: "Arbitrum", shortName: "ARB", hasAave: true, hasFtso: true,
+    name: "Arbitrum", shortName: "ARB", hasAave: true, hasFtso: false,
     gasLabel: "~$0.01", explorerUrl: "https://arbiscan.io", nativeCurrency: "ETH",
   },
   [CHAIN_IDS.POLYGON]: {
-    name: "Polygon", shortName: "MATIC", hasAave: true, hasFtso: true,
+    name: "Polygon", shortName: "MATIC", hasAave: true, hasFtso: false,
     gasLabel: "~$0.01", explorerUrl: "https://polygonscan.com", nativeCurrency: "POL",
   },
   [CHAIN_IDS.SKALE]: {
@@ -119,11 +119,11 @@ export const CHAIN_META: Partial<Record<ChainId, ChainMeta>> = {
     gasLabel: "FREE", explorerUrl: "https://elated-tan-skat.explorer.mainnet.skalenodes.com", nativeCurrency: "sFUEL",
   },
   [CHAIN_IDS.ARBITRUM_SEPOLIA]: {
-    name: "Arbitrum Testnet", shortName: "A-TEST", hasAave: true, hasFtso: true,
+    name: "Arbitrum Testnet", shortName: "A-TEST", hasAave: true, hasFtso: false,
     gasLabel: "~$0", explorerUrl: "https://sepolia.arbiscan.io", nativeCurrency: "ETH",
   },
   [CHAIN_IDS.POLYGON_AMOY]: {
-    name: "Polygon Amoy", shortName: "P-AMOY", hasAave: true, hasFtso: true,
+    name: "Polygon Amoy", shortName: "P-AMOY", hasAave: true, hasFtso: false,
     gasLabel: "~$0", explorerUrl: "https://amoy.polygonscan.com", nativeCurrency: "POL",
   },
 }
