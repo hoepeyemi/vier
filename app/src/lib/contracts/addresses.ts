@@ -45,14 +45,14 @@ const emptyAddresses: ContractAddresses = {
 
 const addresses: Partial<Record<ChainId, ContractAddresses>> = {
   [CHAIN_IDS.FLARE_COSTON2]: {
-    invoiceNFT: (process.env.NEXT_PUBLIC_COSTON2_INVOICE_NFT || process.env.NEXT_PUBLIC_INVOICE_NFT_ADDRESS || "0x457310fA90dd419c86B09F4BDb97168A62e2370a") as `0x${string}`,
-    yieldVault: (process.env.NEXT_PUBLIC_COSTON2_YIELD_VAULT || process.env.NEXT_PUBLIC_YIELD_VAULT_ADDRESS || "0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d") as `0x${string}`,
-    agentRouter: (process.env.NEXT_PUBLIC_COSTON2_AGENT_ROUTER || process.env.NEXT_PUBLIC_AGENT_ROUTER_ADDRESS || "0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3") as `0x${string}`,
-    privacyRegistry: (process.env.NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY || process.env.NEXT_PUBLIC_PRIVACY_REGISTRY_ADDRESS || "0x273530115B355a040735B06b308f3aa9cFa4e451") as `0x${string}`,
+    invoiceNFT: (process.env.NEXT_PUBLIC_COSTON2_INVOICE_NFT || process.env.NEXT_PUBLIC_INVOICE_NFT_ADDRESS || "0x7481aeE59C35bb08c4F4B0DC4DE0C0A143c9d7b7") as `0x${string}`,
+    yieldVault: (process.env.NEXT_PUBLIC_COSTON2_YIELD_VAULT || process.env.NEXT_PUBLIC_YIELD_VAULT_ADDRESS || "0xfDa39D8a75391aAec43BB54a774bf6F03A0033b6") as `0x${string}`,
+    agentRouter: (process.env.NEXT_PUBLIC_COSTON2_AGENT_ROUTER || process.env.NEXT_PUBLIC_AGENT_ROUTER_ADDRESS || "0x95116249980028E240403477E41dF44e12968AC5") as `0x${string}`,
+    privacyRegistry: (process.env.NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY || process.env.NEXT_PUBLIC_PRIVACY_REGISTRY_ADDRESS || "0xc08B41ACeD118665d08b9517c812db483245791C") as `0x${string}`,
     ftsoV2: (process.env.NEXT_PUBLIC_COSTON2_FTSO_V2 || "0xC4e9c78EA53db782E28f28Fdf80BaF59336B304d") as `0x${string}`,
-    ftsoOracle: (process.env.NEXT_PUBLIC_COSTON2_FTSO_ORACLE || "0x0000000000000000000000000000000000000000") as `0x${string}`,
-    aaveYieldSource: (process.env.NEXT_PUBLIC_COSTON2_AAVE_YIELD_SOURCE || "0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d") as `0x${string}`,
-    mockFDCVerifier: (process.env.NEXT_PUBLIC_COSTON2_MOCK_FDC_VERIFIER || "0x827f01e7c3111cbB7b690E12B365eC0E14b144f6") as `0x${string}`,
+    ftsoOracle: (process.env.NEXT_PUBLIC_COSTON2_FTSO_ORACLE || "0xCc351f611b89607e25ab124D3abF58A83ADf94a9") as `0x${string}`,
+    aaveYieldSource: (process.env.NEXT_PUBLIC_COSTON2_AAVE_YIELD_SOURCE || "0xfDa39D8a75391aAec43BB54a774bf6F03A0033b6") as `0x${string}`,
+    mockFDCVerifier: (process.env.NEXT_PUBLIC_COSTON2_MOCK_FDC_VERIFIER || "0x4FE685b35c3A1B9b297eF7D1465C49b5d859daE9") as `0x${string}`,
   },
   [CHAIN_IDS.FLARE]: { ...emptyAddresses },
   [CHAIN_IDS.ARBITRUM_SEPOLIA]: { ...emptyAddresses },
