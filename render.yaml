@@ -6,20 +6,28 @@ services:
     dockerContext: agent
     healthCheckPath: /health
     envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEPLOYMENT_NETWORK
+        value: coston2
       - key: RPC_URL
-        value: https://sepolia.base.org
+        value: https://coston2-api.flare.network/ext/C/rpc
+      - key: COSTON2_RPC
+        value: https://coston2-api.flare.network/ext/C/rpc
       - key: WS_PORT
         value: "8080"
       - key: INVOICE_NFT_ADDRESS
-        value: "0x515ab226DD7917612eeDd439A9Cfb0b4b1731440"
+        value: "0x7481aeE59C35bb08c4F4B0DC4DE0C0A143c9d7b7"
       - key: YIELD_VAULT_ADDRESS
-        value: "0xacBeB5f58604A4A9A8B9a74EC39ebCA1117bC326"
+        value: "0xfDa39D8a75391aAec43BB54a774bf6F03A0033b6"
       - key: AGENT_ROUTER_ADDRESS
-        value: "0xEe9AD131A155E7669004056F01fFb26964637Fd4"
+        value: "0x95116249980028E240403477E41dF44e12968AC5"
+      - key: FTSO_ORACLE_ADDRESS
+        value: "0xCc351f611b89607e25ab124D3abF58A83ADf94a9"
       - key: FTSO_V2_ADDRESS
-        value: "0xA0E9510fBe1Ee857B255B2960438122fdA0b32E3"
-      - key: AAVE_YIELD_ADDRESS
-        value: "0x447De96C1c3E15af485a41fb1B5Fde888B02d9eF"
+        value: "0xC4e9c78EA53db782E28f28Fdf80BaF59336B304d"
+      - key: FLARE_CONTRACT_REGISTRY_ADDRESS
+        value: "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019"
       - key: AGENT_PRIVATE_KEY
         sync: false
       - key: QWEN_API_KEY
