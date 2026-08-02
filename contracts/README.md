@@ -14,12 +14,12 @@ Chain ID: `114`
 
 | Contract | Address | Explorer status |
 | --- | --- | --- |
-| InvoiceNFT | `0x457310fA90dd419c86B09F4BDb97168A62e2370a` | Verified |
-| YieldVault | `0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d` | Verified |
-| AgentRouter | `0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3` | Verified |
-| PrivacyRegistry | `0x273530115B355a040735B06b308f3aa9cFa4e451` | Verified |
-| MockOracle | `0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5` | Verified |
-| MockFDCVerifier | `0x827f01e7c3111cbB7b690E12B365eC0E14b144f6` | Verified |
+| InvoiceNFT | `0x7481aeE59C35bb08c4F4B0DC4DE0C0A143c9d7b7` | Pending |
+| YieldVault | `0xfDa39D8a75391aAec43BB54a774bf6F03A0033b6` | Pending |
+| AgentRouter | `0x95116249980028E240403477E41dF44e12968AC5` | Pending |
+| PrivacyRegistry | `0xc08B41ACeD118665d08b9517c812db483245791C` | Pending |
+| FtsoOracle | `0xCc351f611b89607e25ab124D3abF58A83ADf94a9` | Pending |
+| MockFDCVerifier | `0x4FE685b35c3A1B9b297eF7D1465C49b5d859daE9` | Pending |
 | VierFCCInstructionSender | `0x6Aa62B3979D4cdc6E3A84772d66dC45adA047CaB` | Verified |
 
 Explorer:
@@ -31,7 +31,7 @@ Explorer:
 - `YieldVault` - deposit and yield management
 - `AgentRouter` - records and executes AI-driven strategy decisions
 - `PrivacyRegistry` - selective disclosure registry
-- `MockOracle` - Coston2 demo invoice risk oracle
+- `FtsoOracle` - Coston2 FTSOv2-powered invoice risk oracle (resolves FtsoV2 via FlareContractRegistry)
 - `MockFDCVerifier` - Coston2 demo verifier for FCC-style attestations
 - `VierFCCInstructionSender` - official FCC registry/proxy-compatible instruction sender
 - `AaveV3YieldSource` - optional adapter for a real Aave V3 pool on networks where one exists
