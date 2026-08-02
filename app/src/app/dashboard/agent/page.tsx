@@ -198,7 +198,7 @@ export default function AgentPage() {
           <div className="stat-cell">
             <div className="stat-label">Risk Management</div>
             <div className="stat-value stat-value-green">24/7</div>
-            <div className="text-[11px] text-[#666666] mt-1">Pyth oracle price feeds</div>
+            <div className="text-[11px] text-[#666666] mt-1">Flare FTSOv2 price feeds</div>
           </div>
         </div>
       </main>

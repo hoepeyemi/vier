@@ -249,10 +249,11 @@ export class VierAgent {
 
     try {
       // Step 1: Check market conditions via oracle
+      const oracleSource = this.blockchain.getDataSourceInfo().oracle;
       this.broadcastThought({
         type: 'thinking',
         tokenId: 'system',
-        message: 'ðŸ“¡ Checking market conditions via Pyth Oracle...',
+        message: `Checking market conditions via ${oracleSource}...`,
         timestamp: Date.now(),
       });
 
@@ -292,7 +293,7 @@ export class VierAgent {
       } else {
         const priceInfo = this.currentMarketConditions.ethPrice
           ? `ETH: $${this.currentMarketConditions.ethPrice.toFixed(2)}`
-          : 'Prices: Simulated mode';
+          : `Prices unavailable from ${oracleSource}`;
 
         const regimeEmoji = regime === 'bull' ? 'ðŸ“ˆ' : regime === 'bear' ? 'ðŸ“‰' : regime === 'volatile' ? 'ðŸŒŠ' : 'âš–ï¸';
         const regimeLabel = regime.charAt(0).toUpperCase() + regime.slice(1);
@@ -407,6 +408,9 @@ export class VierAgent {
       return null;
     }
     try {
+      // Trigger FTSOv2 price read → FtsoOracle writes updated risk to InvoiceNFT before we read it.
+      await this.blockchain.assessAndUpdateRisk(tokenId);
+
       // Fetch invoice and deposit data
       const [invoice, deposit] = await Promise.all([
         this.blockchain.getInvoice(tokenId),

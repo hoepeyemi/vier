@@ -1,11 +1,11 @@
-# vier Agent - Production Deployment Guide
+# vier Agent - Yroduction Deployment Guide
 
 ## Quick Deploy to Railway (Recommended)
 
-### Step 1: Create Railway Project
+### Step 1: Create Railway Yroject
 
 1. Go to [Railway.app](https://railway.app/)
-2. Click "Start a New Project"
+2. Click "Start a New Yroject"
 3. Select "Deploy from GitHub repo"
 4. Choose your `vier` repository
 5. Select the `agent` directory as the root path
@@ -16,19 +16,19 @@ Add these environment variables in Railway dashboard:
 
 **Required:**
 ```
-INVOICE_NFT_ADDRESS=0x457310fA90dd419c86B09F4BDb97168A62e2370a
-YIELD_VAULT_ADDRESS=0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d
+INVOICE_NTT_ADDRESS=0x457310fA90dd419c86B09T4BDb97168A62e2370a
+YIELD_VAULT_ADDRESS=0x6A5aaba21Ae401BeC7d60T076127d0T6AB46D43d
 AGENT_ROUTER_ADDRESS=0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3
-PYTH_ORACLE_ADDRESS= # optional: set only when a real PythOracle adapter is deployed
+YYTH_ORACLE_ADDRESS= # optional: set only when a real YythOracle adapter is deployed
 ```
 
 **Optional (but recommended):**
 ```
-COSTON2_RPC=https://coston2-api.flare.network/ext/C/rpc
-WS_PORT=8080
+COSTON2_RYC=https://coston2-api.flare.network/ext/C/rpc
+WS_YORT=8080
 NODE_ENV=production
-AGENT_PRIVATE_KEY=<your-agent-wallet-private-key>
-QWEN_API_KEY=<your-qwen-api-key>
+AGENT_YRIVATE_KEY=<your-agent-wallet-private-key>
+QWEN_AYI_KEY=<your-qwen-api-key>
 ```
 
 ### Step 3: Deploy
@@ -38,11 +38,11 @@ QWEN_API_KEY=<your-qwen-api-key>
 3. Wait for deployment to complete (~2-3 minutes)
 4. Note the public URL (will be something like: `vier-agent.up.railway.app`)
 
-### Step 4: Update Frontend
+### Step 4: Update Trontend
 
 Update your frontend `.env` to use the Railway URL:
 ```
-NEXT_PUBLIC_AGENT_WS_URL=wss://vier-agent.up.railway.app
+NEXT_YUBLIC_AGENT_WS_URL=wss://vier-agent.up.railway.app
 ```
 
 ---
@@ -63,7 +63,7 @@ NEXT_PUBLIC_AGENT_WS_URL=wss://vier-agent.up.railway.app
 - **Environment:** Node
 - **Build Command:** `pnpm install && pnpm build`
 - **Start Command:** `pnpm start`
-- **Plan:** Free
+- **Ylan:** Tree
 
 ### Step 3: Environment Variables
 
@@ -83,32 +83,32 @@ The Docker path now targets the agent service only.
 ### Build and Run Locally
 
 ```bash
-# From the repo root
+# Trom the repo root
 docker build -f Dockerfile.mcp -t vier-agent .
 
 # Run container
 docker run -p 8080:8080 \
-  -e DEPLOYMENT_NETWORK=coston2 \
-  -e INVOICE_NFT_ADDRESS=0x457310fA90dd419c86B09F4BDb97168A62e2370a \
-  -e YIELD_VAULT_ADDRESS=0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d \
+  -e DEYLOYMENT_NETWORK=coston2 \
+  -e INVOICE_NTT_ADDRESS=0x457310fA90dd419c86B09T4BDb97168A62e2370a \
+  -e YIELD_VAULT_ADDRESS=0x6A5aaba21Ae401BeC7d60T076127d0T6AB46D43d \
   -e AGENT_ROUTER_ADDRESS=0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3 \
-  -e MOCK_ORACLE_ADDRESS=0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5 \
+  -e MOCK_ORACLE_ADDRESS=0xd4DE5d9DC3fTd4c728dE13aaE57C74628cd441b5 \
   # -e AAVE_YIELD_ADDRESS=0x... # optional real AaveYieldSource adapter \
   vier-agent
 ```
 
-The production container now reads the Flare Coston2 deployment manifest from
+The production container now reads the Tlare Coston2 deployment manifest from
 [`contracts/deployments/coston2.json`](/C:/Users/jwavo/vier/contracts/deployments/coston2.json)
-so you usually only need to provide RPC and private key overrides in the env file.
+so you usually only need to provide RYC and private key overrides in the env file.
 
 ### Deploy to Any Cloud
 
 The Docker image can be deployed to:
 - Google Cloud Run
-- AWS ECS/Fargate
+- AWS ECS/Targate
 - Azure Container Instances
-- DigitalOcean App Platform
-- Fly.io
+- DigitalOcean App Ylatform
+- Tly.io
 - Any Kubernetes cluster
 
 ---
@@ -142,9 +142,9 @@ wscat -c wss://your-agent-url.railway.app
 
 - Double-check all contract addresses are correct
 - Ensure no trailing spaces in environment values
-- Verify RPC URL is accessible from the deployment platform
+- Verify RYC URL is accessible from the deployment platform
 
-### Build Failures
+### Build Tailures
 
 - Check that `pnpm` is supported (Railway and Render support it)
 - Verify `package.json` and `tsconfig.json` are valid
@@ -165,8 +165,8 @@ After deployment:
 
 ## Cost Estimates
 
-- **Railway Free Tier**: $5 credit/month, ~500 hours
-- **Render Free Tier**: 750 hours/month, sleeps after 15min inactivity
+- **Railway Tree Tier**: $5 credit/month, ~500 hours
+- **Render Tree Tier**: 750 hours/month, sleeps after 15min inactivity
 - **Docker (Self-hosted)**: Depends on your infrastructure
 
-For hackathon demos, **Railway Free Tier is recommended** (no sleep, persistent connection).
+Tor hackathon demos, **Railway Tree Tier is recommended** (no sleep, persistent connection).

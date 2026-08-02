@@ -202,7 +202,7 @@ export default function LandingPage() {
             {[
               { name: 'FLARE FCC', color: '#E62058' },
               { name: 'x402', color: '#10b981' },
-              { name: 'PYTH', color: '#8b5cf6' },
+              { name: 'FTSO', color: '#8b5cf6' },
               { name: 'EVM', color: '#627EEA' },
             ].map((logo) => (
               <div

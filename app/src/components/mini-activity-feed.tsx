@@ -15,7 +15,7 @@ const ACTIVITY_MESSAGES = [
   { message: 'USDC supply APY: 4.25%', type: 'success' as const },
   { message: 'monitoring vault positions', type: 'info' as const },
   { message: 'yield +$0.003 accrued', type: 'yield' as const },
-  { message: 'pyth oracle: connected', type: 'success' as const },
+  { message: 'flare ftso: connected', type: 'success' as const },
   { message: 'rebalance check: optimal', type: 'info' as const },
   { message: 'C2FLR: native gas token active', type: 'success' as const },
   { message: 'strategy scoring complete', type: 'success' as const },

@@ -13,7 +13,7 @@
     "deploy:coston2": "hardhat run scripts/deploy-coston2.js --network coston2",
     "deploy:flare-coston2": "npm run deploy:coston2",
     "verify:coston2": "hardhat run scripts/verify-coston2-all.js --network coston2",
-    "verify:coston2:oracle": "hardhat verify --network coston2 --contract src/MockOracle.sol:MockOracle 0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5 0x457310fA90dd419c86B09F4BDb97168A62e2370a",
+    "verify:coston2:oracle": "hardhat run scripts/verify-coston2-all.js --network coston2",
     "deploy:fcc-sender:coston2": "hardhat run scripts/deploy-fcc-instruction-sender-coston2.js --network coston2"
   },
   "devDependencies": {
@@ -21,7 +21,6 @@
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-verify": "^2.1.0",
     "@openzeppelin/contracts": "^5.2.0",
-    "@pythnetwork/pyth-sdk-solidity": "^4.0.0",
     "chai": "^4.5.0",
     "ethers": "^6.13.4",
     "hardhat": "^2.22.19"

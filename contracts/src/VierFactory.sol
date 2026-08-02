@@ -78,7 +78,7 @@ contract VierFactory {
         _configureAndTransfer(contracts, contracts.mockOracle, true);
     }
 
-    /// @notice Deploy the production stack with a pre-deployed oracle such as PythOracle.
+    /// @notice Deploy the production stack with a pre-deployed oracle such as MockOracle or a Flare-native oracle adapter.
     function deployProtocolWithOracle(ProductionBytecode calldata bytecode, address oracleAddress)
         external
         returns (DeployedContracts memory contracts)

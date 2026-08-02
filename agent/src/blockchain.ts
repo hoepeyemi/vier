@@ -105,14 +105,20 @@ const MOCK_ORACLE_ABI = [
   'function simulateRiskAssessment(uint256 tokenId)',
 ];
 
-// Pyth Oracle ABI (for production)
-const PYTH_ORACLE_ABI = [
+// FtsoOracle ABI: on-chain FTSOv2-powered risk assessment
+const FTSO_ORACLE_ABI = [
+  'function assessAndUpdateRisk(uint256 tokenId)',
   'function getRiskScore(uint256 tokenId) view returns (uint8)',
   'function getPaymentProbability(uint256 tokenId) view returns (uint8)',
-  'function getRiskAssessment(uint256 tokenId) view returns (uint8 riskScore, uint8 paymentProbability, uint256 lastUpdated, int64 collateralPrice)',
-  'function assessRisk(uint256 tokenId, uint256 dueDate, uint256 invoiceValue, uint256 collateralValue, bytes[] calldata priceUpdateData) payable',
-  'function getEthUsdPrice() view returns (int64)',
-  'function getNativeUsdPrice() view returns (int64)',
+  'function resolveFtsoV2() view returns (address)',
+];
+
+const FTSO_V2_ABI = [
+  'function getFeedByIdInWei(bytes21 _feedId) payable returns (uint256 _value, uint64 _timestamp)',
+];
+
+const FLARE_CONTRACT_REGISTRY_ABI = [
+  'function getContractAddressByName(string calldata name) view returns (address)',
 ];
 
 // Aave V3 Yield Source ABI (for production)
@@ -127,9 +133,13 @@ export interface ContractAddresses {
   invoiceNFT: string;
   yieldVault: string;
   agentRouter: string;
-  // Oracle: use pythOracle in production, mockOracle for local dev
+  // Oracle: use Flare FTSOv2 for market prices, mockOracle for invoice risk scoring.
   mockOracle?: string;
-  pythOracle?: string;
+  ftsoV2?: string;
+  ftsoOracle?: string;
+  flareContractRegistry?: string;
+  ftsoEthUsdFeedId?: string;
+  ftsoNativeUsdFeedId?: string;
   aaveYieldSource?: string;
 }
 
@@ -141,7 +151,12 @@ export class BlockchainService {
   private yieldVault: ethers.Contract;
   private agentRouter: ethers.Contract;
   private mockOracle: ethers.Contract | null = null;
-  private pythOracle: ethers.Contract | null = null;
+  private ftsoOracleContract: ethers.Contract | null = null;
+  private ftsoV2: ethers.Contract | null = null;
+  private ftsoV2AddressFallback: string | null = null;
+  private flareContractRegistry: ethers.Contract | null = null;
+  private signerOrProvider: ethers.Signer | ethers.Provider;
+  private ftsoFeedIds: { ethUsd: string; nativeUsd: string };
   private aaveYieldSource: ethers.Contract | null = null;
 
   // Real APY cache (fetched from Aave V3)
@@ -164,18 +179,34 @@ export class BlockchainService {
     }
 
     const signerOrProvider = this.signer || this.provider;
+    this.signerOrProvider = signerOrProvider;
 
     this.invoiceNFT = new ethers.Contract(addresses.invoiceNFT, INVOICE_NFT_ABI, signerOrProvider);
     this.yieldVault = new ethers.Contract(addresses.yieldVault, YIELD_VAULT_ABI, signerOrProvider);
     this.agentRouter = new ethers.Contract(addresses.agentRouter, AGENT_ROUTER_ABI, signerOrProvider);
+    this.ftsoFeedIds = {
+      ethUsd: addresses.ftsoEthUsdFeedId || '0x014554482f55534400000000000000000000000000',
+      nativeUsd: addresses.ftsoNativeUsdFeedId || '0x01464c522f55534400000000000000000000000000',
+    };
 
-    // Oracle: prefer Pyth (production), fall back to MockOracle (local dev)
-    if (addresses.pythOracle) {
-      this.pythOracle = new ethers.Contract(addresses.pythOracle, PYTH_ORACLE_ABI, signerOrProvider);
-      console.log('Using Pyth Oracle for real price data');
-    } else if (addresses.mockOracle) {
+    if (addresses.flareContractRegistry) {
+      this.flareContractRegistry = new ethers.Contract(addresses.flareContractRegistry, FLARE_CONTRACT_REGISTRY_ABI, this.provider);
+    }
+    if (addresses.ftsoV2) {
+      this.ftsoV2AddressFallback = addresses.ftsoV2;
+    }
+    console.log(this.flareContractRegistry ? 'Using FlareContractRegistry for FTSOv2 resolution' : 'Using configured FTSOv2 address');
+
+    // MockOracle supplies invoice-specific risk scores until a production risk scorer is wired.
+    if (addresses.mockOracle) {
       this.mockOracle = new ethers.Contract(addresses.mockOracle, MOCK_ORACLE_ABI, signerOrProvider);
-      console.log('Using Mock Oracle (local dev)');
+      console.log('Using MockOracle for invoice risk scoring');
+    }
+
+    // FtsoOracle: on-chain FTSOv2 risk assessment — triggers live price reads and writes to InvoiceNFT
+    if (addresses.ftsoOracle) {
+      this.ftsoOracleContract = new ethers.Contract(addresses.ftsoOracle, FTSO_ORACLE_ABI, signerOrProvider);
+      console.log('Using FtsoOracle for on-chain FTSOv2 risk assessment');
     }
 
     // Yield source: Aave V3 for real yield
@@ -187,7 +218,7 @@ export class BlockchainService {
 
   /// Check if using production oracles
   isUsingRealOracle(): boolean {
-    return this.pythOracle !== null;
+    return this.ftsoV2 !== null;
   }
 
   isUsingRealYield(): boolean {
@@ -262,16 +293,14 @@ export class BlockchainService {
   }
 
   async getRiskData(tokenId: string): Promise<{ riskScore: number; paymentProbability: number }> {
-    // Use whichever oracle is available (prefer Pyth)
-    const oracle = this.pythOracle || this.mockOracle;
-    if (!oracle) {
+    if (!this.mockOracle) {
       return { riskScore: 50, paymentProbability: 50 };
     }
 
     try {
       const [riskScore, paymentProbability] = await Promise.all([
-        oracle.getRiskScore(tokenId),
-        oracle.getPaymentProbability(tokenId),
+        this.mockOracle.getRiskScore(tokenId),
+        this.mockOracle.getPaymentProbability(tokenId),
       ]);
 
       return {
@@ -295,6 +324,28 @@ export class BlockchainService {
       return true;
     } catch (error) {
       console.error(`Error simulating risk for ${tokenId}:`, error);
+      return false;
+    }
+  }
+
+  /// Trigger FTSOv2 live price read and write updated risk scores to InvoiceNFT via FtsoOracle.
+  /// Returns true if the on-chain update succeeded; false if no signer, no oracle, or price is stale.
+  async assessAndUpdateRisk(tokenId: string): Promise<boolean> {
+    if (!this.signer || !this.ftsoOracleContract) {
+      return false;
+    }
+
+    try {
+      const tx = await this.ftsoOracleContract.assessAndUpdateRisk(tokenId, { value: 0n });
+      await tx.wait();
+      return true;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('Stale FTSO price')) {
+        console.warn(`FTSOv2 price stale for invoice #${tokenId}, using cached risk score`);
+      } else {
+        console.error(`assessAndUpdateRisk failed for #${tokenId}:`, msg);
+      }
       return false;
     }
   }
@@ -447,21 +498,42 @@ export class BlockchainService {
     }
   }
 
-  /// Get real price from Pyth Oracle
+  private async getFtsoV2(): Promise<ethers.Contract | null> {
+    if (this.ftsoV2) return this.ftsoV2;
+
+    let resolved: string | null = null;
+    if (this.flareContractRegistry) {
+      try {
+        const registryAddress = await this.flareContractRegistry.getContractAddressByName('FtsoV2');
+        if (registryAddress && registryAddress !== ethers.ZeroAddress) {
+          resolved = registryAddress;
+        }
+      } catch (error) {
+        console.warn('FlareContractRegistry FtsoV2 lookup failed, checking fallback:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    resolved = resolved || this.ftsoV2AddressFallback;
+    if (!resolved) return null;
+
+    this.ftsoV2 = new ethers.Contract(resolved, FTSO_V2_ABI, this.signerOrProvider);
+    console.log('Using Flare FTSOv2 at ' + resolved);
+    return this.ftsoV2;
+  }
+
+  /// Get live prices from Flare FTSOv2.
   async getRealPrice(feed: 'ETH' | 'NATIVE'): Promise<number | null> {
-    if (!this.pythOracle) {
+    const ftsoV2 = await this.getFtsoV2();
+    if (!ftsoV2) {
       return null;
     }
 
     try {
-      const price = feed === 'ETH'
-        ? await this.pythOracle.getEthUsdPrice()
-        : await this.pythOracle.getNativeUsdPrice();
-
-      // Price has 8 decimals
-      return Number(price) / 1e8;
+      const feedId = feed === 'ETH' ? this.ftsoFeedIds.ethUsd : this.ftsoFeedIds.nativeUsd;
+      const [value] = await ftsoV2.getFeedByIdInWei.staticCall(feedId, { value: 0n });
+      return Number(ethers.formatUnits(value, 18));
     } catch (error) {
-      console.error(`Error fetching ${feed} price:`, error);
+      console.error(`Error fetching ${feed} price from Flare FTSOv2:`, error);
       return null;
     }
   }
@@ -469,7 +541,7 @@ export class BlockchainService {
   /// Get data source info for transparency
   getDataSourceInfo(): { oracle: string; yield: string } {
     return {
-      oracle: this.pythOracle ? 'Pyth Network (Real-time)' : 'Mock Oracle (Simulated)',
+      oracle: (this.flareContractRegistry || this.ftsoV2 || this.ftsoV2AddressFallback) ? 'Flare FTSOv2 (Live)' : 'Mock Oracle (Simulated)',
       yield: this.aaveYieldSource ? 'Aave V3 (Real DeFi)' : 'Simulated Yield',
     };
   }

@@ -19,7 +19,7 @@ services:
         value: 0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d
       - key: AGENT_ROUTER_ADDRESS
         value: 0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3
-      - key: PYTH_ORACLE_ADDRESS
+      - key: FTSO_V2_ADDRESS
         value: 0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3
       - key: AGENT_PRIVATE_KEY
         sync: false  # Will be set via Render dashboard (sensitive)

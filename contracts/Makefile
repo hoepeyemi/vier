@@ -14,9 +14,9 @@ help:
 	@echo "  make clean          - Remove Hardhat build output"
 	@echo ""
 	@echo "Deployment:"
-	@echo "  make deploy-local    - Deploy core contracts on Hardhat network"
-	@echo "  make deploy-factory  - Deploy via VierFactory"
-	@echo "  make deploy-multichain - Deploy with optional Pyth/Aave config"
+	@echo "  make deploy-local      - Deploy core contracts on Hardhat network"
+	@echo "  make deploy-factory    - Deploy via VierFactory"
+	@echo "  make deploy-multichain - Deploy with optional Flare FTSOv2/Aave config"
 
 setup:
 	npm install

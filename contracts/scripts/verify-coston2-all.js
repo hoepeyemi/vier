@@ -2,6 +2,11 @@ const hre = require("hardhat");
 const deployment = require("../deployments/coston2.json");
 
 async function verify(name, address, constructorArguments = [], contract) {
+  if (!address) {
+    console.log(`Skipping ${name}: no address in deployment manifest`);
+    return;
+  }
+
   console.log(`\nVerifying ${name}: ${address}`);
   try {
     await hre.run("verify:verify", {
@@ -27,7 +32,22 @@ async function main() {
   await verify("PrivacyRegistry", deployment.privacyRegistry, [], "src/PrivacyRegistry.sol:PrivacyRegistry");
   await verify("AgentRouter", deployment.agentRouter, [deployment.invoiceNFT, deployment.yieldVault], "src/AgentRouter.sol:AgentRouter");
   await verify("MockFDCVerifier", deployment.mockFDCVerifier, [], "src/mocks/MockFDCVerifier.sol:MockFDCVerifier");
-  await verify("MockOracle", deployment.mockOracle, [deployment.invoiceNFT], "src/MockOracle.sol:MockOracle");
+
+  if (deployment.ftsoOracle) {
+    await verify(
+      "FtsoOracle",
+      deployment.ftsoOracle,
+      [
+        deployment.invoiceNFT,
+        deployment.flareContractRegistry,
+        deployment.ftsoNativeUsdFeedId,
+        deployment.ftsoEthUsdFeedId,
+      ],
+      "src/FtsoOracle.sol:FtsoOracle"
+    );
+  } else {
+    await verify("MockOracle", deployment.mockOracle, [deployment.invoiceNFT], "src/MockOracle.sol:MockOracle");
+  }
 }
 
 main().catch((error) => {

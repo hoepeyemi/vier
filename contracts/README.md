@@ -17,9 +17,10 @@ Chain ID: `114`
 | InvoiceNFT | `0x457310fA90dd419c86B09F4BDb97168A62e2370a` | Verified |
 | YieldVault | `0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d` | Verified |
 | AgentRouter | `0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3` | Verified |
-| PrivacyRegistry | `0x2DA4B52913A928263a405dE3b42a5768a4dCa3b0` | Verified |
-| PythOracle | `0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3` | Verified |
-| AaveV3YieldSource | `0x5a179d261fD322ecaED06FA9Aa2973980D74322c` | Verified |
+| PrivacyRegistry | `0x273530115B355a040735B06b308f3aa9cFa4e451` | Verified |
+| MockOracle | `0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5` | Verified |
+| MockFDCVerifier | `0x827f01e7c3111cbB7b690E12B365eC0E14b144f6` | Verified |
+| VierFCCInstructionSender | `0x6Aa62B3979D4cdc6E3A84772d66dC45adA047CaB` | Verified |
 
 Explorer:
 - [Flare Coston2 Explorer](https://coston2-explorer.flare.network)
@@ -30,16 +31,18 @@ Explorer:
 - `YieldVault` - deposit and yield management
 - `AgentRouter` - records and executes AI-driven strategy decisions
 - `PrivacyRegistry` - selective disclosure registry
-- `PythOracle` - Flare Coston2 oracle integration
-- `AaveV3YieldSource` - yield source integration for the deployed flow
+- `MockOracle` - Coston2 demo invoice risk oracle
+- `MockFDCVerifier` - Coston2 demo verifier for FCC-style attestations
+- `VierFCCInstructionSender` - official FCC registry/proxy-compatible instruction sender
+- `AaveV3YieldSource` - optional adapter for a real Aave V3 pool on networks where one exists
 
 ## Setup
 
 ```bash
 cd contracts
-npm install
-npm run build
-npm test
+pnpm install
+pnpm run build
+pnpm test
 ```
 
 ## Deployment
@@ -47,15 +50,15 @@ npm test
 ### Flare Coston2
 
 ```bash
-npm run deploy:coston2
+pnpm run deploy:coston2
 ```
 
-This deployment flow uses the built-in Flare Coston2 RPC fallbacks and the live oracle and yield source defaults.
+This deployment flow uses Flare Coston2 RPC fallbacks and writes `deployments/coston2.json` as the canonical manifest.
 
 ### Local network
 
 ```bash
-npm run deploy:local
+pnpm run deploy:local
 ```
 
 ### Production-ready factory
@@ -67,7 +70,7 @@ npm run deploy:local
 The repo includes a programmatic verifier for the live Flare Coston2 deployment:
 
 ```bash
-npm run verify:coston2
+pnpm run verify:coston2
 ```
 
 Required environment variable:
@@ -76,26 +79,19 @@ Required environment variable:
 ETHERSCAN_API_KEY=your_api_key_here
 ```
 
-The verifier checks:
-
-- `InvoiceNFT`
-- `YieldVault`
-- `AgentRouter`
-- `PrivacyRegistry`
-- `PythOracle`
-- `AaveV3YieldSource`
-
 ## Architecture
 
 ```text
 InvoiceNFT -> YieldVault -> AgentRouter
       |             |
-   PythOracle   AaveV3YieldSource
+  MockOracle   optional AaveV3YieldSource
+      |
+MockFDCVerifier + VierFCCInstructionSender
 ```
 
 ## Notes
 
 - The live Flare Coston2 contracts are verified on Coston2 Explorer.
+- Flare FTSOv2 market prices are read by the agent runtime.
 - The deployment manifest is the canonical source of truth for the app and agent.
 - If you redeploy any contract, update the deployment manifest and the frontend/agent env values together.
-

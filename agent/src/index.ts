@@ -26,7 +26,8 @@ function validateEnvironment(addresses: ContractAddresses): { valid: boolean; wa
     { name: 'INVOICE_NFT_ADDRESS', value: addresses.invoiceNFT, required: true, description: 'InvoiceNFT contract' },
     { name: 'YIELD_VAULT_ADDRESS', value: addresses.yieldVault, required: true, description: 'YieldVault contract' },
     { name: 'AGENT_ROUTER_ADDRESS', value: addresses.agentRouter, required: true, description: 'AgentRouter contract' },
-    { name: 'MOCK_ORACLE_ADDRESS', value: process.env.MOCK_ORACLE_ADDRESS || process.env.PYTH_ORACLE_ADDRESS, required: false, description: 'Oracle contract (MockOracle or PythOracle)' },
+    { name: 'RISK_ORACLE_ADDRESS', value: process.env.RISK_ORACLE_ADDRESS || process.env.FTSO_ORACLE_ADDRESS || process.env.MOCK_ORACLE_ADDRESS, required: false, description: 'Invoice risk oracle contract' },
+    { name: 'FTSO_V2_ADDRESS', value: process.env.FTSO_V2_ADDRESS, required: false, description: 'Flare FTSOv2 price feed contract' },
   ];
 
   const zeroAddress = '0x0000000000000000000000000000000000000000';
@@ -162,14 +163,17 @@ function sameAddress(a?: string, b?: string): boolean {
 const invoiceNFTAddress = cleanAddress(process.env.INVOICE_NFT_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.invoiceNFT) || ZERO_ADDRESS;
 const yieldVaultAddress = cleanAddress(process.env.YIELD_VAULT_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.yieldVault) || ZERO_ADDRESS;
 const agentRouterAddress = cleanAddress(process.env.AGENT_ROUTER_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.agentRouter) || ZERO_ADDRESS;
-const mockOracleAddress = cleanAddress(process.env.MOCK_ORACLE_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.mockOracle);
-const configuredPythOracle = cleanAddress(process.env.PYTH_ORACLE_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.pythOracle);
+const riskOracleAddress = cleanAddress(process.env.RISK_ORACLE_ADDRESS)
+  || cleanAddress(process.env.FTSO_ORACLE_ADDRESS)
+  || cleanAddress(process.env.MOCK_ORACLE_ADDRESS)
+  || cleanAddress(DEPLOYMENT_DEFAULTS.ftsoOracle)
+  || cleanAddress(DEPLOYMENT_DEFAULTS.mockOracle);
+const flareContractRegistryAddress = cleanAddress(process.env.FLARE_CONTRACT_REGISTRY_ADDRESS) || '0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019';
+const ftsoV2Address = cleanAddress(process.env.FTSO_V2_ADDRESS) || '0xC4e9c78EA53db782E28f28Fdf80BaF59336B304d';
 const configuredAaveYield = cleanAddress(process.env.AAVE_YIELD_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.aaveYieldSource);
 
-// PythOracle and AaveYieldSource have different ABIs from MockOracle/YieldVault.
-// On Coston2 demo deployments those values are often intentionally blank; never
-// treat the mock oracle or the vault as the production integration by address alias.
-const pythOracleAddress = sameAddress(configuredPythOracle, mockOracleAddress) ? undefined : configuredPythOracle;
+// AaveYieldSource has a different ABI from YieldVault. Never treat the vault as
+// the production integration by address alias.
 const aaveYieldSourceAddress = sameAddress(configuredAaveYield, yieldVaultAddress) ? undefined : configuredAaveYield;
 
 // Contract addresses (update after deployment)
@@ -177,20 +181,21 @@ const ADDRESSES: ContractAddresses = {
   invoiceNFT: invoiceNFTAddress,
   yieldVault: yieldVaultAddress,
   agentRouter: agentRouterAddress,
-  mockOracle: mockOracleAddress,
-  pythOracle: pythOracleAddress,
+  mockOracle: riskOracleAddress,
+  ftsoOracle: cleanAddress(process.env.FTSO_ORACLE_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.ftsoOracle),
+  ftsoV2: ftsoV2Address,
+  flareContractRegistry: flareContractRegistryAddress,
+  ftsoEthUsdFeedId: process.env.FTSO_ETH_USD_FEED_ID || '0x014554482f55534400000000000000000000000000',
+  ftsoNativeUsdFeedId: process.env.FTSO_NATIVE_USD_FEED_ID || '0x01464c522f55534400000000000000000000000000',
   aaveYieldSource: aaveYieldSourceAddress,
 };
 
-if (configuredPythOracle && !pythOracleAddress) {
-  console.warn('PYTH_ORACLE_ADDRESS points to MockOracle; using MockOracle simulated mode instead.');
-}
 if (configuredAaveYield && !aaveYieldSourceAddress) {
   console.warn('AAVE_YIELD_ADDRESS points to YieldVault; using simulated yield mode instead.');
 }
 
 // Check if using production data sources
-const isProduction = !!ADDRESSES.pythOracle || !!ADDRESSES.aaveYieldSource;
+const isProduction = !!ADDRESSES.ftsoV2 || !!ADDRESSES.aaveYieldSource;
 
 async function main() {
   const RPC_URL = await selectWorkingRpcUrl(COSTON2_RPC_FALLBACKS);
@@ -232,12 +237,12 @@ async function main() {
   console.log('='.repeat(60));
   console.log('');
   console.log('  Data Sources:');
-  console.log(`  Ã°Å¸â€œÅ  Oracle: ${ADDRESSES.pythOracle ? 'Ã¢Å“â€¦ Pyth Network (Real-time)' : 'Ã¢Å¡Â Ã¯Â¸Â  Mock Oracle (Simulated)'}`);
+  console.log('  Oracle: ' + (ADDRESSES.flareContractRegistry ? 'Flare FTSOv2 via Contract Registry' : 'Mock Oracle (Simulated)'));
   console.log(`  Ã°Å¸â€™Â° Yield: ${ADDRESSES.aaveYieldSource ? 'Ã¢Å“â€¦ Flare Vault (Real DeFi)' : 'Ã¢Å¡Â Ã¯Â¸Â  Simulated Yield'}`);
   if (!isProduction) {
     console.log('');
     console.log('  Ã¢Å¡Â Ã¯Â¸Â  Running with SIMULATED data for demo.');
-    console.log('  Set PYTH_ORACLE_ADDRESS for production oracle price feeds.');
+    console.log('  Set FTSO_V2_ADDRESS to override the Flare Coston2 FTSOv2 default.');
   }
   console.log('='.repeat(60));
 
