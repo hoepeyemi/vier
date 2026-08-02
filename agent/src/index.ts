@@ -146,17 +146,48 @@ const DEPLOYMENT_DEFAULTS = readDeploymentDefaults(DEPLOYMENT_NETWORK);
 // Flare FCE: TEE attestation mode (enabled when FCE_TEE_MODE=true)
 const FCE_TEE_MODE = process.env.FCE_TEE_MODE === 'true';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+function cleanAddress(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === ZERO_ADDRESS) return undefined;
+  return trimmed;
+}
+
+function sameAddress(a?: string, b?: string): boolean {
+  return Boolean(a && b && a.toLowerCase() === b.toLowerCase());
+}
+
+const invoiceNFTAddress = cleanAddress(process.env.INVOICE_NFT_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.invoiceNFT) || ZERO_ADDRESS;
+const yieldVaultAddress = cleanAddress(process.env.YIELD_VAULT_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.yieldVault) || ZERO_ADDRESS;
+const agentRouterAddress = cleanAddress(process.env.AGENT_ROUTER_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.agentRouter) || ZERO_ADDRESS;
+const mockOracleAddress = cleanAddress(process.env.MOCK_ORACLE_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.mockOracle);
+const configuredPythOracle = cleanAddress(process.env.PYTH_ORACLE_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.pythOracle);
+const configuredAaveYield = cleanAddress(process.env.AAVE_YIELD_ADDRESS) || cleanAddress(DEPLOYMENT_DEFAULTS.aaveYieldSource);
+
+// PythOracle and AaveYieldSource have different ABIs from MockOracle/YieldVault.
+// On Coston2 demo deployments those values are often intentionally blank; never
+// treat the mock oracle or the vault as the production integration by address alias.
+const pythOracleAddress = sameAddress(configuredPythOracle, mockOracleAddress) ? undefined : configuredPythOracle;
+const aaveYieldSourceAddress = sameAddress(configuredAaveYield, yieldVaultAddress) ? undefined : configuredAaveYield;
+
 // Contract addresses (update after deployment)
 const ADDRESSES: ContractAddresses = {
-  invoiceNFT: process.env.INVOICE_NFT_ADDRESS || DEPLOYMENT_DEFAULTS.invoiceNFT || '0x0000000000000000000000000000000000000000',
-  yieldVault: process.env.YIELD_VAULT_ADDRESS || DEPLOYMENT_DEFAULTS.yieldVault || '0x0000000000000000000000000000000000000000',
-  agentRouter: process.env.AGENT_ROUTER_ADDRESS || DEPLOYMENT_DEFAULTS.agentRouter || '0x0000000000000000000000000000000000000000',
-  // Oracle: Pyth for production, MockOracle for local dev / Coston2 testnet
-  mockOracle: process.env.MOCK_ORACLE_ADDRESS || DEPLOYMENT_DEFAULTS.mockOracle,
-  pythOracle: process.env.PYTH_ORACLE_ADDRESS || DEPLOYMENT_DEFAULTS.pythOracle,
-  // Yield source: Aave V3 for real DeFi yields
-  aaveYieldSource: process.env.AAVE_YIELD_ADDRESS || DEPLOYMENT_DEFAULTS.aaveYieldSource,
+  invoiceNFT: invoiceNFTAddress,
+  yieldVault: yieldVaultAddress,
+  agentRouter: agentRouterAddress,
+  mockOracle: mockOracleAddress,
+  pythOracle: pythOracleAddress,
+  aaveYieldSource: aaveYieldSourceAddress,
 };
+
+if (configuredPythOracle && !pythOracleAddress) {
+  console.warn('PYTH_ORACLE_ADDRESS points to MockOracle; using MockOracle simulated mode instead.');
+}
+if (configuredAaveYield && !aaveYieldSourceAddress) {
+  console.warn('AAVE_YIELD_ADDRESS points to YieldVault; using simulated yield mode instead.');
+}
 
 // Check if using production data sources
 const isProduction = !!ADDRESSES.pythOracle || !!ADDRESSES.aaveYieldSource;
@@ -211,8 +242,7 @@ async function main() {
   console.log('='.repeat(60));
 
   // Validate contract addresses
-  const zeroAddress = '0x0000000000000000000000000000000000000000';
-  if (ADDRESSES.invoiceNFT === zeroAddress) {
+  if (ADDRESSES.invoiceNFT === ZERO_ADDRESS) {
     console.warn('\nÃ¢Å¡Â Ã¯Â¸Â  Contract addresses not configured.');
     console.log('   Set environment variables after deployment.\n');
   }

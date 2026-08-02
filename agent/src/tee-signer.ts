@@ -1,15 +1,15 @@
-// Flare Confidential Compute (FCC) — TEE Payload Signer
+// Flare Confidential Compute (FCC) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â TEE Payload Signer
 //
 // In production, the Flare FCE infrastructure injects FLARE_FCE_IDENTITY_KEY
-// into the TEE at runtime. This module uses that key (or falls back to
-// AGENT_PRIVATE_KEY for demo/testnet) to sign decision payloads before
+// into the TEE at runtime. Production mode requires that key; local demos may
+// opt into AGENT_PRIVATE_KEY fallback with ALLOW_INSECURE_FCE_KEY_FALLBACK=true.
 // submitting them to AgentRouter.executeStrategyWithAttestation().
 //
 // The on-chain flow:
 //   1. Agent decides on a strategy inside the TEE
 //   2. This module encodes + signs the decision payload
 //   3. Agent calls AgentRouter.executeStrategyWithAttestation(teeId, payload, sig)
-//   4. AgentRouter asks MockFDCVerifier.verifyAttestation() → checks ECDSA sig
+//   4. AgentRouter asks MockFDCVerifier.verifyAttestation() ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ checks ECDSA sig
 //   5. On success: strategy executes + PrivacyRegistry.logTEEStrategyChange() called
 
 import { ethers } from 'ethers';
@@ -23,9 +23,9 @@ const FCE_IMAGE_HASH =
 const FLARE_CHAIN_ID = BigInt(process.env.FLARE_CHAIN_ID || '114');
 
 export interface SignedAttestation {
-  teeId: string;     // bytes32 hex — TEE machine identity
-  payload: string;   // bytes hex — ABI-encoded TeeDecisionPayload
-  signature: string; // bytes hex — ECDSA sig over keccak256(teeId || payload)
+  teeId: string;     // bytes32 hex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â TEE machine identity
+  payload: string;   // bytes hex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ABI-encoded TeeDecisionPayload
+  signature: string; // bytes hex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ECDSA sig over keccak256(teeId || payload)
 }
 
 export class TEESigner {
@@ -38,8 +38,12 @@ export class TEESigner {
 
   constructor(agentPrivateKey: string) {
     // In real Flare FCC: FLARE_FCE_IDENTITY_KEY is injected at runtime.
-    // For testnet demo: fall back to the agent's wallet key.
-    const signingKey = process.env.FLARE_FCE_IDENTITY_KEY || agentPrivateKey;
+    // Production mode never silently falls back to the hot agent wallet.
+    const allowInsecureFallback = process.env.ALLOW_INSECURE_FCE_KEY_FALLBACK === 'true';
+    const signingKey = process.env.FLARE_FCE_IDENTITY_KEY || (allowInsecureFallback ? agentPrivateKey : undefined);
+    if (!signingKey) {
+      throw new Error('FLARE_FCE_IDENTITY_KEY is required when FCE_TEE_MODE=true');
+    }
     this.wallet = new ethers.Wallet(signingKey);
 
     // teeId can be overridden by env (set by deploy-coston2.js output) or computed.
@@ -52,7 +56,7 @@ export class TEESigner {
         )
       );
 
-    // Start nonce from current timestamp (ms) — always greater than any nonce
+    // Start nonce from current timestamp (ms) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â always greater than any nonce
     // used in a previous session, preventing "nonce already used" reverts after restart.
     this.nonce = Date.now();
   }
@@ -88,11 +92,11 @@ export class TEESigner {
 
   async signPayload(teeId: string, payload: string): Promise<string> {
     // Matches MockFDCVerifier.verifyAttestation:
-    //   keccak256(abi.encodePacked(teeId, payload))  → eth_sign
+    //   keccak256(abi.encodePacked(teeId, payload))  ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ eth_sign
     const msgHash = ethers.keccak256(
       ethers.solidityPacked(['bytes32', 'bytes'], [teeId, payload])
     );
-    // ethers.Wallet.signMessage() prepends the Ethereum prefix → matches _recover() in MockFDCVerifier
+    // ethers.Wallet.signMessage() prepends the Ethereum prefix ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ matches _recover() in MockFDCVerifier
     return this.wallet.signMessage(ethers.getBytes(msgHash));
   }
 

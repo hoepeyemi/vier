@@ -11,7 +11,10 @@
     "deploy:mock-aave": "hardhat run scripts/deploy-mock-aave.js --network hardhat",
     "deploy:multichain": "hardhat run scripts/deploy-multichain.js --network coston2",
     "deploy:coston2": "hardhat run scripts/deploy-coston2.js --network coston2",
-    "deploy:flare-coston2": "npm run deploy:coston2"
+    "deploy:flare-coston2": "npm run deploy:coston2",
+    "verify:coston2": "hardhat run scripts/verify-coston2-all.js --network coston2",
+    "verify:coston2:oracle": "hardhat verify --network coston2 --contract src/MockOracle.sol:MockOracle 0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5 0x457310fA90dd419c86B09F4BDb97168A62e2370a",
+    "deploy:fcc-sender:coston2": "hardhat run scripts/deploy-fcc-instruction-sender-coston2.js --network coston2"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",

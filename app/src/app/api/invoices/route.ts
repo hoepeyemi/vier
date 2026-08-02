@@ -58,6 +58,8 @@ export async function GET() {
           riskScore: invoice.riskScore,
           paymentProbability: invoice.paymentProbability,
           issuer: invoice.issuer,
+          dataCommitment: invoice.dataCommitment,
+          amountCommitment: invoice.amountCommitment,
           deposit: deposit?.active
             ? {
                 principal: deposit.principal.toString(),

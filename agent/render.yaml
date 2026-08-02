@@ -14,11 +14,11 @@ services:
       - key: COSTON2_RPC
         value: https://coston2-api.flare.network/ext/C/rpc
       - key: INVOICE_NFT_ADDRESS
-        value: 0x018ee8F363421016177DbC8F9492fe2a1C720e29
+        value: 0x457310fA90dd419c86B09F4BDb97168A62e2370a
       - key: YIELD_VAULT_ADDRESS
-        value: 0x7f51D3B234E4c20959A1f6e91D3B852EE16c65A6
+        value: 0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d
       - key: AGENT_ROUTER_ADDRESS
-        value: 0x4430248F3b2304F946f08c43A06C3451657FD658
+        value: 0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3
       - key: PYTH_ORACLE_ADDRESS
         value: 0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3
       - key: AGENT_PRIVATE_KEY

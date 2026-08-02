@@ -16,10 +16,10 @@ Add these environment variables in Railway dashboard:
 
 **Required:**
 ```
-INVOICE_NFT_ADDRESS=0x018ee8F363421016177DbC8F9492fe2a1C720e29
-YIELD_VAULT_ADDRESS=0x7f51D3B234E4c20959A1f6e91D3B852EE16c65A6
-AGENT_ROUTER_ADDRESS=0x4430248F3b2304F946f08c43A06C3451657FD658
-PYTH_ORACLE_ADDRESS=0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3
+INVOICE_NFT_ADDRESS=0x457310fA90dd419c86B09F4BDb97168A62e2370a
+YIELD_VAULT_ADDRESS=0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d
+AGENT_ROUTER_ADDRESS=0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3
+PYTH_ORACLE_ADDRESS= # optional: set only when a real PythOracle adapter is deployed
 ```
 
 **Optional (but recommended):**
@@ -52,7 +52,7 @@ NEXT_PUBLIC_AGENT_WS_URL=wss://vier-agent.up.railway.app
 ### Step 1: Create New Web Service
 
 1. Go to [Render.com](https://render.com/)
-2. Click "New +" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ "Web Service"
+2. Click "New +" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ "Web Service"
 3. Connect your GitHub repository
 4. Select the `vier` repository
 
@@ -89,11 +89,11 @@ docker build -f Dockerfile.mcp -t vier-agent .
 # Run container
 docker run -p 8080:8080 \
   -e DEPLOYMENT_NETWORK=coston2 \
-  -e INVOICE_NFT_ADDRESS=0x018ee8F363421016177DbC8F9492fe2a1C720e29 \
-  -e YIELD_VAULT_ADDRESS=0x7f51D3B234E4c20959A1f6e91D3B852EE16c65A6 \
-  -e AGENT_ROUTER_ADDRESS=0x4430248F3b2304F946f08c43A06C3451657FD658 \
-  -e PYTH_ORACLE_ADDRESS=0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3 \
-  -e AAVE_YIELD_ADDRESS=0x5a179d261fD322ecaED06FA9Aa2973980D74322c \
+  -e INVOICE_NFT_ADDRESS=0x457310fA90dd419c86B09F4BDb97168A62e2370a \
+  -e YIELD_VAULT_ADDRESS=0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d \
+  -e AGENT_ROUTER_ADDRESS=0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3 \
+  -e MOCK_ORACLE_ADDRESS=0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5 \
+  # -e AAVE_YIELD_ADDRESS=0x... # optional real AaveYieldSource adapter \
   vier-agent
 ```
 
@@ -156,10 +156,10 @@ wscat -c wss://your-agent-url.railway.app
 
 After deployment:
 
-1. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Update frontend environment variables
-2. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Test WebSocket connection from browser
-3. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Verify agent receives blockchain data
-4. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Test full mint ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ deposit ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ agent analysis flow
+1. ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Update frontend environment variables
+2. ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Test WebSocket connection from browser
+3. ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Verify agent receives blockchain data
+4. ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Test full mint ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ deposit ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ agent analysis flow
 
 ---
 

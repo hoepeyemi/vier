@@ -5,7 +5,7 @@
  * ALIVE: Live agent log, pulse animations, grid background
  */
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAccount, useChainId } from "wagmi"
 import { getChainMeta } from "@/lib/wagmi"
 import { Switch } from "@/components/ui/switch"
@@ -13,19 +13,54 @@ import { StatusBar } from "@/components/ui/status-bar"
 import { TerminalNav } from "@/components/terminal-nav"
 import { LiveAgentLog } from "@/components/live-agent-log"
 import { useYieldVault } from "@/hooks/use-yield-vault"
-import { formatUnits } from "viem"
 
 export default function AgentPage() {
   const [autoExecute, setAutoExecute] = useState(true)
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-  const { activeDepositsCount, totalYield } = useYieldVault()
+  const { activeDepositsCount } = useYieldVault()
   const chainMeta = getChainMeta(chainId)
   const networkLabel = chainMeta?.shortName
     ? `${chainMeta.name.toUpperCase()} (${chainMeta.shortName})`
     : `CHAIN ${chainId}`
 
-  const yieldFormatted = Number(formatUnits(BigInt(totalYield || 0), 18))
+  const [liveYieldEarned, setLiveYieldEarned] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchLiveYield() {
+      if (!isConnected) {
+        setLiveYieldEarned(0)
+        return
+      }
+
+      try {
+        const response = await fetch("/api/invoices", { cache: "no-store" })
+        const data = await response.json()
+        if (!data.success || !data.data?.invoices) return
+
+        const total = data.data.invoices.reduce((sum: number, invoice: { deposit?: { accruedYield?: string } | null }) => {
+          if (!invoice.deposit?.accruedYield) return sum
+          return sum + Number(invoice.deposit.accruedYield) / 1e18
+        }, 0)
+
+        if (!cancelled) setLiveYieldEarned(total)
+      } catch {
+        if (!cancelled) setLiveYieldEarned(0)
+      }
+    }
+
+    fetchLiveYield()
+    const interval = window.setInterval(fetchLiveYield, 15_000)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [isConnected])
+
+  const yieldFormatted = liveYieldEarned
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] bg-grid noise-overlay scan-line pb-8">

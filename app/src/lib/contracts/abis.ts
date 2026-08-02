@@ -15,6 +15,16 @@ export const InvoiceNFTABI = [
     outputs: [{ name: "tokenId", type: "uint256" }],
   },
   {
+    name: "mintWithAttestation",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "teeId", type: "bytes32" },
+      { name: "payload", type: "bytes" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [{ name: "tokenId", type: "uint256" }],
+  },  {
     name: "updateStatus",
     type: "function",
     stateMutability: "nonpayable",
@@ -184,6 +194,31 @@ export const InvoiceNFTABI = [
   },
   // State variables
   {
+    name: "mintAttestationMode",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "fdcVerifier",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    name: "mintAttestations",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      { name: "teeId", type: "bytes32" },
+      { name: "encryptedInvoiceHash", type: "bytes32" },
+      { name: "nonce", type: "uint256" },
+      { name: "attested", type: "bool" },
+    ],
+  },  {
     name: "yieldVault",
     type: "function",
     stateMutability: "view",
@@ -218,6 +253,16 @@ export const InvoiceNFTABI = [
     ],
   },
   {
+    name: "FCCInvoiceMinted",
+    type: "event",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "issuer", type: "address", indexed: true },
+      { name: "teeId", type: "bytes32", indexed: true },
+      { name: "encryptedInvoiceHash", type: "bytes32", indexed: false },
+      { name: "nonce", type: "uint256", indexed: false },
+    ],
+  },  {
     name: "InvoiceStatusUpdated",
     type: "event",
     inputs: [

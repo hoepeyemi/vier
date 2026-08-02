@@ -1,4 +1,4 @@
-﻿# vier Contracts
+# vier Contracts
 
 Hardhat workspace for the vier protocol contracts on Flare Coston2.
 
@@ -14,9 +14,9 @@ Chain ID: `114`
 
 | Contract | Address | Explorer status |
 | --- | --- | --- |
-| InvoiceNFT | `0x018ee8F363421016177DbC8F9492fe2a1C720e29` | Verified |
-| YieldVault | `0x7f51D3B234E4c20959A1f6e91D3B852EE16c65A6` | Verified |
-| AgentRouter | `0x4430248F3b2304F946f08c43A06C3451657FD658` | Verified |
+| InvoiceNFT | `0x457310fA90dd419c86B09F4BDb97168A62e2370a` | Verified |
+| YieldVault | `0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d` | Verified |
+| AgentRouter | `0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3` | Verified |
 | PrivacyRegistry | `0x2DA4B52913A928263a405dE3b42a5768a4dCa3b0` | Verified |
 | PythOracle | `0x7CfdF0580C87d0c379c4a5cDbC46A036E8AF71E3` | Verified |
 | AaveV3YieldSource | `0x5a179d261fD322ecaED06FA9Aa2973980D74322c` | Verified |

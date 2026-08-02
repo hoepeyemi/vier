@@ -26,6 +26,7 @@ export type ContractAddresses = {
   privacyRegistry: `0x${string}`
   pythOracle: `0x${string}`
   aaveYieldSource: `0x${string}`
+  mockFDCVerifier: `0x${string}`
 }
 
 const ZERO = "0x0000000000000000000000000000000000000000" as `0x${string}`
@@ -37,16 +38,18 @@ const emptyAddresses: ContractAddresses = {
   privacyRegistry: ZERO,
   pythOracle: ZERO,
   aaveYieldSource: ZERO,
+  mockFDCVerifier: ZERO,
 }
 
 const addresses: Partial<Record<ChainId, ContractAddresses>> = {
   [CHAIN_IDS.FLARE_COSTON2]: {
-    invoiceNFT: (process.env.NEXT_PUBLIC_COSTON2_INVOICE_NFT || process.env.NEXT_PUBLIC_INVOICE_NFT_ADDRESS || ZERO) as `0x${string}`,
-    yieldVault: (process.env.NEXT_PUBLIC_COSTON2_YIELD_VAULT || process.env.NEXT_PUBLIC_YIELD_VAULT_ADDRESS || ZERO) as `0x${string}`,
-    agentRouter: (process.env.NEXT_PUBLIC_COSTON2_AGENT_ROUTER || process.env.NEXT_PUBLIC_AGENT_ROUTER_ADDRESS || ZERO) as `0x${string}`,
-    privacyRegistry: (process.env.NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY || process.env.NEXT_PUBLIC_PRIVACY_REGISTRY_ADDRESS || ZERO) as `0x${string}`,
-    pythOracle: (process.env.NEXT_PUBLIC_COSTON2_PYTH_ORACLE || ZERO) as `0x${string}`,
-    aaveYieldSource: (process.env.NEXT_PUBLIC_COSTON2_AAVE_YIELD_SOURCE || ZERO) as `0x${string}`,
+    invoiceNFT: (process.env.NEXT_PUBLIC_COSTON2_INVOICE_NFT || process.env.NEXT_PUBLIC_INVOICE_NFT_ADDRESS || "0x457310fA90dd419c86B09F4BDb97168A62e2370a") as `0x${string}`,
+    yieldVault: (process.env.NEXT_PUBLIC_COSTON2_YIELD_VAULT || process.env.NEXT_PUBLIC_YIELD_VAULT_ADDRESS || "0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d") as `0x${string}`,
+    agentRouter: (process.env.NEXT_PUBLIC_COSTON2_AGENT_ROUTER || process.env.NEXT_PUBLIC_AGENT_ROUTER_ADDRESS || "0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3") as `0x${string}`,
+    privacyRegistry: (process.env.NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY || process.env.NEXT_PUBLIC_PRIVACY_REGISTRY_ADDRESS || "0x273530115B355a040735B06b308f3aa9cFa4e451") as `0x${string}`,
+    pythOracle: (process.env.NEXT_PUBLIC_COSTON2_PYTH_ORACLE || "0xd4DE5d9DC3fFd4c728dE13aaE57C74628cd441b5") as `0x${string}`,
+    aaveYieldSource: (process.env.NEXT_PUBLIC_COSTON2_AAVE_YIELD_SOURCE || "0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d") as `0x${string}`,
+    mockFDCVerifier: (process.env.NEXT_PUBLIC_COSTON2_MOCK_FDC_VERIFIER || "0x827f01e7c3111cbB7b690E12B365eC0E14b144f6") as `0x${string}`,
   },
   [CHAIN_IDS.FLARE]: { ...emptyAddresses },
   [CHAIN_IDS.ARBITRUM_SEPOLIA]: { ...emptyAddresses },
@@ -64,6 +67,7 @@ const addresses: Partial<Record<ChainId, ContractAddresses>> = {
     privacyRegistry: (process.env.NEXT_PUBLIC_PRIVACY_REGISTRY_ADDRESS || "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0") as `0x${string}`,
     pythOracle: ZERO,
     aaveYieldSource: ZERO,
+    mockFDCVerifier: ZERO,
   },
 }
 

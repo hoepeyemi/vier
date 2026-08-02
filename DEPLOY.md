@@ -52,17 +52,17 @@ The agent auto-loads `invoiceNFT`, `yieldVault`, `agentRouter`, `privacyRegistry
 
 ## 4. Configure the Frontend
 
-Set the app environment from the same manifest:
+Set the app environment from the same manifest. The frontend FCC mint endpoint also requires `FLARE_FCE_IDENTITY_KEY`, `FLARE_TEE_ID`, `FCE_IMAGE_HASH`, and `FLARE_CHAIN_ID` on the server runtime; never expose these with `NEXT_PUBLIC_` prefixes.
 
 ```bash
 NEXT_PUBLIC_NETWORK_MODE=testnet
 NEXT_PUBLIC_CHAIN_ID=114
 NEXT_PUBLIC_COSTON2_RPC=https://coston2-api.flare.network/ext/C/rpc
 NEXT_PUBLIC_AGENT_WS_URL=wss://<your-agent-host>
-NEXT_PUBLIC_COSTON2_INVOICE_NFT=<invoiceNFT>
-NEXT_PUBLIC_COSTON2_YIELD_VAULT=<yieldVault>
-NEXT_PUBLIC_COSTON2_AGENT_ROUTER=<agentRouter>
-NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY=<privacyRegistry>
+NEXT_PUBLIC_COSTON2_INVOICE_NFT=0x457310fA90dd419c86B09F4BDb97168A62e2370a
+NEXT_PUBLIC_COSTON2_YIELD_VAULT=0x6A5aaba21Ae401BeC7d60F076127d0F6AB46D43d
+NEXT_PUBLIC_COSTON2_AGENT_ROUTER=0x98DbA1d179b013342C2f63Ef551Cf72de4bb64e3
+NEXT_PUBLIC_COSTON2_PRIVACY_REGISTRY=0x273530115B355a040735B06b308f3aa9cFa4e451
 ```
 
 ## 5. Production Checks

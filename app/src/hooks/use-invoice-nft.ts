@@ -1,10 +1,17 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId, usePublicClient } from "wagmi"
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId, usePublicClient, useSignMessage } from "wagmi"
 import { InvoiceNFTABI, type Invoice, InvoiceStatus } from "@/lib/contracts/abis"
 import { getInvoiceNFTAddress } from "@/lib/contracts/addresses"
-import { keccak256, encodePacked, toHex, decodeEventLog } from "viem"
+import {
+  buildFCCMintAuthorizationMessage,
+  encryptInvoicePayload,
+  promoteEncryptedInvoiceDraft,
+  storeEncryptedInvoiceDraft,
+  type EncryptedInvoiceEnvelope,
+} from "@/lib/fcc-invoice-crypto"
+import { keccak256, encodePacked, toHex, decodeEventLog, getAddress, type Hex } from "viem"
 
 type MintLogLevel = "info" | "success" | "warning" | "error"
 
@@ -132,6 +139,7 @@ export function useMintInvoice() {
   const { address } = useAccount()
   const contractAddress = getInvoiceNFTAddress(chainId)
   const publicClient = usePublicClient()
+  const { signMessageAsync } = useSignMessage()
   const [confirmationTimedOut, setConfirmationTimedOut] = useState(false)
   const [confirmationStartedAt, setConfirmationStartedAt] = useState<number | null>(null)
   const [mintLogs, setMintLogs] = useState<MintLogEntry[]>([])
@@ -143,6 +151,7 @@ export function useMintInvoice() {
   const lastErrorRef = useRef<string | null>(null)
   const lastHashRef = useRef<string | null>(null)
   const lastForceCheckHashRef = useRef<string | null>(null)
+  const pendingEnvelopeRef = useRef<EncryptedInvoiceEnvelope | null>(null)
 
   const { writeContract, data: hash, isPending, error } = useWriteContract()
 
@@ -186,6 +195,9 @@ export function useMintInvoice() {
       setForcedReceipt(null)
       if (lastHashRef.current !== hash) {
         appendMintLog("info", `tx submitted: ${hash}`)
+        if (pendingEnvelopeRef.current) {
+          storeEncryptedInvoiceDraft(hash as `0x${string}`, pendingEnvelopeRef.current)
+        }
         lastHashRef.current = hash
       }
       return
@@ -196,6 +208,7 @@ export function useMintInvoice() {
     setForcedReceipt(null)
     lastHashRef.current = null
     lastForceCheckHashRef.current = null
+    pendingEnvelopeRef.current = null
   }, [hash])
 
   useEffect(() => {
@@ -321,13 +334,17 @@ export function useMintInvoice() {
   useEffect(() => {
     if (resolvedIsSuccess && !lastSuccessRef.current) {
       appendMintLog("success", `transaction confirmed on-chain${mintedTokenId ? `, token #${mintedTokenId}` : ""}`)
+      if (hash && mintedTokenId) {
+        promoteEncryptedInvoiceDraft(hash as `0x${string}`, mintedTokenId)
+        appendMintLog("success", "encrypted invoice envelope stored locally")
+      }
       lastSuccessRef.current = true
     }
 
     if (!resolvedIsSuccess) {
       lastSuccessRef.current = false
     }
-  }, [resolvedIsSuccess, mintedTokenId, appendMintLog])
+  }, [resolvedIsSuccess, mintedTokenId, hash, appendMintLog])
 
   const mint = async (params: {
     invoiceData: string
@@ -336,50 +353,81 @@ export function useMintInvoice() {
     salt?: `0x${string}`
   }) => {
     setMintLogs([])
-    appendMintLog("info", "building invoice commitments")
+    appendMintLog("info", "encrypting invoice data with AES-GCM")
 
-    // Generate salt if not provided
     const salt = params.salt || (toHex(crypto.getRandomValues(new Uint8Array(32))) as `0x${string}`)
+    const encryptedEnvelope = await encryptInvoicePayload(params.invoiceData)
 
-    // Create commitment hashes
     const dataCommitment = keccak256(
-      encodePacked(["string", "bytes32"], [params.invoiceData, salt])
+      encodePacked(["bytes32", "bytes32"], [encryptedEnvelope.ciphertextHash, salt])
     )
     const amountCommitment = keccak256(
       encodePacked(["string", "bytes32"], [params.amount, salt])
     )
-
-    // Convert due date to unix timestamp
     const dueDateUnix = BigInt(Math.floor(params.dueDate.getTime() / 1000))
 
-    appendMintLog("info", "sending mint transaction")
+    appendMintLog("info", "requesting issuer authorization signature")
     try {
-      if (!address) {
-        throw new Error("Wallet address unavailable")
-      }
+      if (!address) throw new Error("Wallet address unavailable")
+      if (!publicClient) throw new Error("Public client unavailable")
 
-      const simulation = await publicClient?.simulateContract({
-        address: contractAddress,
-        abi: InvoiceNFTABI,
-        functionName: "mint",
-        args: [dataCommitment, amountCommitment, dueDateUnix],
-        account: address,
+      const normalizedIssuer = getAddress(address)
+      const requestNonce = toHex(crypto.getRandomValues(new Uint8Array(16))) as `0x${string}`
+      const issuerMessage = buildFCCMintAuthorizationMessage({
+        issuer: normalizedIssuer,
+        dataCommitment,
+        amountCommitment,
+        encryptedInvoiceHash: encryptedEnvelope.ciphertextHash,
+        dueDate: dueDateUnix.toString(),
+        requestNonce,
+      })
+      const issuerSignature = await signMessageAsync({ message: issuerMessage })
+
+      appendMintLog("info", "requesting FCC mint attestation")
+      const attestationResp = await fetch("/api/fcc/mint-attestation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          issuer: normalizedIssuer,
+          dataCommitment,
+          amountCommitment,
+          encryptedInvoiceHash: encryptedEnvelope.ciphertextHash,
+          dueDate: dueDateUnix.toString(),
+          requestNonce,
+          issuerSignature,
+        }),
       })
 
-      if (!simulation) {
-        throw new Error("Unable to simulate mint transaction")
+      const attestation = await attestationResp.json().catch(() => null) as null | {
+        teeId?: Hex
+        payload?: Hex
+        signature?: Hex
+        error?: string
+      }
+      if (!attestationResp.ok || !attestation?.teeId || !attestation.payload || !attestation.signature) {
+        throw new Error(attestation?.error || "FCC mint attestation failed")
       }
 
+      appendMintLog("info", "sending FCC-attested mint transaction")
+      const simulation = await publicClient.simulateContract({
+        address: contractAddress,
+        abi: InvoiceNFTABI,
+        functionName: "mintWithAttestation",
+        args: [attestation.teeId, attestation.payload, attestation.signature],
+        account: normalizedIssuer,
+      })
+
+      pendingEnvelopeRef.current = encryptedEnvelope
       await writeContract(simulation.request)
       appendMintLog("info", "transaction broadcast")
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Mint simulation failed"
+      pendingEnvelopeRef.current = null
+      const message = error instanceof Error ? error.message : "FCC encrypted mint failed"
       appendMintLog("error", message)
       throw error
     }
 
-    // Return salt so it can be stored for later verification
-    return { salt, dataCommitment, amountCommitment }
+    return { salt, dataCommitment, amountCommitment, encryptedInvoiceHash: encryptedEnvelope.ciphertextHash }
   }
 
   return {

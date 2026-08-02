@@ -38,7 +38,7 @@ interface QuickBooksInvoice {
 
 function MintInvoiceContent() {
   const searchParams = useSearchParams()
-  const { address, isConnected } = useAccount()
+  const { isConnected } = useAccount()
   const chainId = useChainId()
   const chainMeta = getChainMeta(chainId)
   const networkLabel = chainMeta?.shortName
@@ -58,49 +58,6 @@ function MintInvoiceContent() {
     file: null as File | null,
     quickbooksId: null as string | null,
   })
-
-  // Load saved form data from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('vier-mint-form')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setFormData({
-          clientName: parsed.clientName || "",
-          amount: parsed.amount || "",
-          currency: parsed.currency || "USD",
-          dueDate: parsed.dueDate ? new Date(parsed.dueDate) : undefined,
-          allowDisclosure: parsed.allowDisclosure || false,
-          file: null,
-          quickbooksId: parsed.quickbooksId || null,
-        })
-      } catch (e) {
-        console.error('Failed to load saved form data:', e)
-      }
-    }
-  }, [])
-
-  // Save form data
-  useEffect(() => {
-    if (!isSuccess) {
-      const toSave = {
-        clientName: formData.clientName,
-        amount: formData.amount,
-        currency: formData.currency,
-        dueDate: formData.dueDate?.toISOString(),
-        allowDisclosure: formData.allowDisclosure,
-        quickbooksId: formData.quickbooksId,
-      }
-      localStorage.setItem('vier-mint-form', JSON.stringify(toSave))
-    }
-  }, [formData, isSuccess])
-
-  // Clear saved form data after success
-  useEffect(() => {
-    if (isSuccess && typeof window !== 'undefined') {
-      localStorage.removeItem('vier-mint-form')
-    }
-  }, [isSuccess])
 
   const validateForm = () => {
     const errors: { amount?: string; dueDate?: string } = {}
@@ -179,7 +136,7 @@ function MintInvoiceContent() {
       if (result) {
         toast.success("Invoice minted successfully!", { id: toastId })
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to mint invoice", { id: toastId })
     }
   }
@@ -389,7 +346,7 @@ function MintInvoiceContent() {
                 {/* Security Note */}
                 <div className="p-4 bg-[#10b981]/10 border border-[#10b981]/20 rounded">
                   <p className="text-[11px] text-[#10b981]">
-                    Data is encrypted and stored as a commitment hash on-chain. Only you control access.
+Invoice details are encrypted in your browser before minting. Only commitments and FCC attestations go on-chain.
                   </p>
                 </div>
               </div>
@@ -472,7 +429,7 @@ function MintInvoiceContent() {
               {/* Warning */}
               <div className="p-4 bg-[#f59e0b]/10 border border-[#f59e0b]/20 rounded">
                 <div className="text-[11px] text-[#f59e0b]">
-                  Review carefully. Once minted, invoice details cannot be edited.
+Review carefully. Your invoice is encrypted before FCC-attested minting and cannot be edited after mint.
                 </div>
               </div>
 

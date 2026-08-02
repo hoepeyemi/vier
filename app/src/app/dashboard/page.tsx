@@ -41,6 +41,7 @@ interface InvoiceDisplay {
   strategy: string
   apy: string
   accruedYield: string
+  accruedYieldRaw: number
   status: string
   riskScore: number
 }
@@ -70,7 +71,7 @@ export default function Dashboard() {
 
   const { isConnected } = useAccount()
   const { totalInvoices } = useInvoiceNFT()
-  const { tvl, totalYield, activeDepositsCount, conservativeAPY, aggressiveAPY } = useYieldVault()
+  const { tvl, activeDepositsCount, conservativeAPY, aggressiveAPY } = useYieldVault()
 
   const fetchInvoices = async () => {
     if (!isConnected) {
@@ -93,6 +94,7 @@ export default function Dashboard() {
           const dueDate = new Date(inv.dueDate)
           const daysUntilDue = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
           const principal = inv.deposit ? Number(formatUnits(BigInt(inv.deposit.principal), 18)) : 0
+          const accruedYieldRaw = inv.deposit ? Number(formatUnits(BigInt(inv.deposit.accruedYield), 18)) : 0
           const strategy = strategyLabelFrom(inv)
           const isInYield = Boolean(inv.deposit) || inv.status === "InYield"
 
@@ -105,7 +107,8 @@ export default function Dashboard() {
             daysUntilDue,
             strategy,
             apy: strategy === "aggressive" ? `${aggressiveAPY}%` : strategy === "conservative" ? `${conservativeAPY}%` : "—",
-            accruedYield: inv.deposit ? `+$${Number(formatUnits(BigInt(inv.deposit.accruedYield), 18)).toFixed(2)}` : "$0.00",
+            accruedYield: inv.deposit ? `+$${accruedYieldRaw.toFixed(2)}` : "$0.00",
+            accruedYieldRaw,
             status: isInYield ? "InYield" : inv.status,
             riskScore: inv.riskScore || 75,
           }
@@ -142,8 +145,8 @@ export default function Dashboard() {
     inv.id.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const tvlFormatted = Number(formatUnits(BigInt(tvl || 0), 18))
-  const yieldFormatted = Number(formatUnits(BigInt(totalYield || 0), 18))
+  const tvlFormatted = Number(tvl || 0)
+  const yieldFormatted = invoices.reduce((sum, invoice) => sum + invoice.accruedYieldRaw, 0)
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] bg-grid noise-overlay scan-line pb-8">

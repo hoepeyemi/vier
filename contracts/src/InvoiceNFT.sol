@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IFDCVerifier.sol";
 
 /// @title VierNFT - Tokenized Invoice as RWA
 /// @notice ERC721 representing tokenized invoices with privacy-preserving commitments
@@ -30,19 +31,39 @@ contract InvoiceNFT is ERC721, ERC721Enumerable, Ownable {
         Cancelled // Invoice was cancelled
     }
 
+    struct FCCMintAttestation {
+        bytes32 teeId;
+        bytes32 encryptedInvoiceHash;
+        uint256 nonce;
+        bool attested;
+    }
+
     // ============ State ============
 
     uint256 private _nextTokenId;
     mapping(uint256 => Invoice) public invoices;
     mapping(uint256 => mapping(address => bool)) public revealAuthorized;
+    mapping(uint256 => FCCMintAttestation) public mintAttestations;
+    mapping(bytes32 => mapping(uint256 => bool)) public usedMintNonces;
 
     address public yieldVault;
     address public agentRouter;
     address public oracle;
+    address public fdcVerifier;
+    bool public mintAttestationMode;
+    uint256 public mintPayloadMaxAge = 5 minutes;
 
     // ============ Events ============
 
     event InvoiceMinted(uint256 indexed tokenId, address indexed issuer, bytes32 dataCommitment, uint256 dueDate);
+
+    event FCCInvoiceMinted(
+        uint256 indexed tokenId,
+        address indexed issuer,
+        bytes32 indexed teeId,
+        bytes32 encryptedInvoiceHash,
+        uint256 nonce
+    );
 
     event InvoiceStatusUpdated(uint256 indexed tokenId, InvoiceStatus oldStatus, InvoiceStatus newStatus);
 
@@ -51,6 +72,12 @@ contract InvoiceNFT is ERC721, ERC721Enumerable, Ownable {
     event RevealAuthorized(uint256 indexed tokenId, address indexed authorizedAddress);
 
     event InvoicePaid(uint256 indexed tokenId, address indexed payer, uint256 amount, uint256 timestamp);
+
+    event FDCVerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
+
+    event MintAttestationModeToggled(bool enabled);
+
+    event MintPayloadMaxAgeUpdated(uint256 maxAgeSeconds);
 
     // ============ Modifiers ============
 
@@ -90,6 +117,27 @@ contract InvoiceNFT is ERC721, ERC721Enumerable, Ownable {
         oracle = _oracle;
     }
 
+    function setFDCVerifier(address _fdcVerifier) external onlyOwner {
+        require(_fdcVerifier != address(0), "Invalid address: zero");
+        address old = fdcVerifier;
+        fdcVerifier = _fdcVerifier;
+        emit FDCVerifierUpdated(old, _fdcVerifier);
+    }
+
+    function setMintAttestationMode(bool enabled) external onlyOwner {
+        if (enabled) {
+            require(fdcVerifier != address(0), "FDC verifier not configured");
+        }
+        mintAttestationMode = enabled;
+        emit MintAttestationModeToggled(enabled);
+    }
+
+    function setMintPayloadMaxAge(uint256 maxAgeSeconds) external onlyOwner {
+        require(maxAgeSeconds >= 60 && maxAgeSeconds <= 1 hours, "Invalid payload age");
+        mintPayloadMaxAge = maxAgeSeconds;
+        emit MintPayloadMaxAgeUpdated(maxAgeSeconds);
+    }
+
     // ============ Core Functions ============
 
     /// @notice Mint a new invoice NFT
@@ -101,8 +149,62 @@ contract InvoiceNFT is ERC721, ERC721Enumerable, Ownable {
         external
         returns (uint256 tokenId)
     {
+        require(!mintAttestationMode, "FCC mint attestation required");
+        tokenId = _mintInvoice(msg.sender, dataCommitment, amountCommitment, dueDate);
+    }
+
+    /// @notice Mint a new invoice NFT from a Flare FCC-attested encrypted invoice commitment
+    /// @dev Payload ABI encoding:
+    ///      abi.encode(address issuer, bytes32 dataCommitment, bytes32 amountCommitment,
+    ///                 bytes32 encryptedInvoiceHash, uint256 dueDate, uint256 nonce, uint256 timestamp)
+    ///      The encrypted invoice bytes stay off-chain/client-side; only the hash of the ciphertext is stored.
+    function mintWithAttestation(bytes32 teeId, bytes calldata payload, bytes calldata signature)
+        external
+        returns (uint256 tokenId)
+    {
+        require(mintAttestationMode, "FCC mint attestation not active");
+        require(fdcVerifier != address(0), "FDC verifier not configured");
+        require(
+            IFDCVerifier(fdcVerifier).verifyAttestation(teeId, payload, signature),
+            "Invalid FCC mint attestation"
+        );
+
+        (
+            address issuer,
+            bytes32 dataCommitment,
+            bytes32 amountCommitment,
+            bytes32 encryptedInvoiceHash,
+            uint256 dueDate,
+            uint256 nonce,
+            uint256 timestamp
+        ) = abi.decode(payload, (address, bytes32, bytes32, bytes32, uint256, uint256, uint256));
+
+        require(msg.sender == issuer, "Issuer must submit mint");
+        require(encryptedInvoiceHash != bytes32(0), "Invalid encrypted invoice hash");
+        require(!usedMintNonces[teeId][nonce], "FCC mint nonce already used");
+        usedMintNonces[teeId][nonce] = true;
+        require(block.timestamp <= timestamp + mintPayloadMaxAge, "FCC mint payload expired");
+        require(timestamp <= block.timestamp + 60, "FCC mint timestamp in future");
+
+        tokenId = _mintInvoice(issuer, dataCommitment, amountCommitment, dueDate);
+        mintAttestations[tokenId] = FCCMintAttestation({
+            teeId: teeId,
+            encryptedInvoiceHash: encryptedInvoiceHash,
+            nonce: nonce,
+            attested: true
+        });
+
+        emit FCCInvoiceMinted(tokenId, issuer, teeId, encryptedInvoiceHash, nonce);
+    }
+
+    function _mintInvoice(address issuer, bytes32 dataCommitment, bytes32 amountCommitment, uint256 dueDate)
+        internal
+        returns (uint256 tokenId)
+    {
+        require(issuer != address(0), "Invalid issuer");
         require(dueDate > block.timestamp, "Due date must be in future");
         require(dataCommitment != bytes32(0), "Invalid data commitment");
+        require(amountCommitment != bytes32(0), "Invalid amount commitment");
 
         tokenId = _nextTokenId++;
 
@@ -111,16 +213,15 @@ contract InvoiceNFT is ERC721, ERC721Enumerable, Ownable {
             amountCommitment: amountCommitment,
             dueDate: dueDate,
             createdAt: block.timestamp,
-            issuer: msg.sender,
+            issuer: issuer,
             status: InvoiceStatus.Active,
-            riskScore: 50, // Default middle score
+            riskScore: 50,
             paymentProbability: 50
         });
 
-        // Use a plain mint so contract wallets and smart accounts can receive invoices.
-        _mint(msg.sender, tokenId);
+        _mint(issuer, tokenId);
 
-        emit InvoiceMinted(tokenId, msg.sender, dataCommitment, dueDate);
+        emit InvoiceMinted(tokenId, issuer, dataCommitment, dueDate);
     }
 
     /// @notice Update invoice status (by YieldVault or token owner only)

@@ -1,8 +1,8 @@
-// Flare Confidential Compute (FCC) â€” TEE Attestation Tests
+// Flare Confidential Compute (FCC) Ã¢â‚¬â€ TEE Attestation Tests
 //
 // Covers the full end-to-end flow:
-//   TEE signs payload â†’ MockFDCVerifier verifies ECDSA â†’ AgentRouter executes
-//   strategy â†’ PrivacyRegistry records immutable audit entry
+//   TEE signs payload Ã¢â€ â€™ MockFDCVerifier verifies ECDSA Ã¢â€ â€™ AgentRouter executes
+//   strategy Ã¢â€ â€™ PrivacyRegistry records immutable audit entry
 //
 // These tests prove the FCC integration is correct before deploying to Coston2.
 
@@ -10,7 +10,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { deployCoreContracts, increaseTime } = require("./helpers");
 
-// â”€â”€ Fixtures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Fixtures Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function deployFCCContracts() {
   const base = await deployCoreContracts();
@@ -19,10 +19,10 @@ async function deployFCCContracts() {
   const mockFDC = await MockFDCVerifier.deploy();
   await mockFDC.waitForDeployment();
 
-  // TEE signer wallet â€” in production this is the Flare FCE identity key
+  // TEE signer wallet Ã¢â‚¬â€ in production this is the Flare FCE identity key
   const teeSigner = ethers.Wallet.createRandom();
 
-  // teeId = keccak256(imageHash || chainId)  â€” mirrors tee-signer.ts
+  // teeId = keccak256(imageHash || chainId)  Ã¢â‚¬â€ mirrors tee-signer.ts
   const imageHash = ethers.keccak256(ethers.toUtf8Bytes("vier-fce-v1-test"));
   const chainId = (await ethers.provider.getNetwork()).chainId;
   const teeId = ethers.keccak256(
@@ -67,12 +67,23 @@ async function createAttestation(teeSigner, teeId, tokenId, strategy, confidence
     ethers.solidityPacked(["bytes32", "bytes"], [teeId, payload])
   );
 
-  // Wallet.signMessage prepends the Ethereum prefix â€” matches MockFDCVerifier._recover
+  // Wallet.signMessage prepends the Ethereum prefix Ã¢â‚¬â€ matches MockFDCVerifier._recover
   const signature = await teeSigner.signMessage(ethers.getBytes(msgHash));
 
   return { payload, signature };
 }
 
+
+async function createMintAttestation(teeSigner, teeId, issuer, dataCommitment, amountCommitment, encryptedInvoiceHash, dueDate, nonce) {
+  const block = await ethers.provider.getBlock("latest");
+  const payload = ethers.AbiCoder.defaultAbiCoder().encode(
+    ["address", "bytes32", "bytes32", "bytes32", "uint256", "uint256", "uint256"],
+    [issuer.address, dataCommitment, amountCommitment, encryptedInvoiceHash, BigInt(dueDate), BigInt(nonce), BigInt(block.timestamp)]
+  );
+  const msgHash = ethers.keccak256(ethers.solidityPacked(["bytes32", "bytes"], [teeId, payload]));
+  const signature = await teeSigner.signMessage(ethers.getBytes(msgHash));
+  return { payload, signature };
+}
 async function mintAndDeposit(user, invoiceNFT, yieldVault, strategy = 0) {
   const dataCommitment = ethers.keccak256(ethers.randomBytes(32));
   const now = (await ethers.provider.getBlock("latest")).timestamp;
@@ -85,7 +96,7 @@ async function mintAndDeposit(user, invoiceNFT, yieldVault, strategy = 0) {
   return tokenId;
 }
 
-// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Tests Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 describe("MockFDCVerifier", function () {
   it("registers and queries a TEE", async function () {
@@ -143,7 +154,7 @@ describe("MockFDCVerifier", function () {
   });
 });
 
-describe("AgentRouter â€” FCC TEE attestation mode", function () {
+describe("AgentRouter Ã¢â‚¬â€ FCC TEE attestation mode", function () {
   it("end-to-end: executes strategy change via valid TEE attestation", async function () {
     const { user1, invoiceNFT, yieldVault, agentRouter, teeSigner, teeId } =
       await deployFCCContracts();
@@ -151,7 +162,7 @@ describe("AgentRouter â€” FCC TEE attestation mode", function () {
     const tokenId = await mintAndDeposit(user1, invoiceNFT, yieldVault, 0); // Hold
 
     const { payload, signature } = await createAttestation(
-      teeSigner, teeId, tokenId, 2, 85, "Long duration â€” aggressive yield recommended", Date.now()
+      teeSigner, teeId, tokenId, 2, 85, "Long duration Ã¢â‚¬â€ aggressive yield recommended", Date.now()
     );
 
     const tx = await agentRouter.executeStrategyWithAttestation(teeId, payload, signature);
@@ -187,7 +198,7 @@ describe("AgentRouter â€” FCC TEE attestation mode", function () {
     // First submission succeeds
     await agentRouter.executeStrategyWithAttestation(teeId, payload, signature);
 
-    // Exact same payload replayed â€” must revert
+    // Exact same payload replayed Ã¢â‚¬â€ must revert
     await expect(
       agentRouter.executeStrategyWithAttestation(teeId, payload, signature)
     ).to.be.revertedWith("AgentRouter: nonce already used");
@@ -315,7 +326,7 @@ describe("AgentRouter â€” FCC TEE attestation mode", function () {
   });
 });
 
-describe("PrivacyRegistry â€” TEE audit trail", function () {
+describe("PrivacyRegistry Ã¢â‚¬â€ TEE audit trail", function () {
   it("logs an immutable audit entry after TEE-attested execution", async function () {
     const { user1, invoiceNFT, yieldVault, agentRouter, privacyRegistry, teeSigner, teeId } =
       await deployFCCContracts();
@@ -369,7 +380,7 @@ describe("PrivacyRegistry â€” TEE audit trail", function () {
     ).to.be.revertedWith("PrivacyRegistry: not authorized router");
   });
 
-  it("audit log is append-only â€” multiple entries accumulate", async function () {
+  it("audit log is append-only Ã¢â‚¬â€ multiple entries accumulate", async function () {
     const { user1, invoiceNFT, yieldVault, agentRouter, privacyRegistry, teeSigner, teeId } =
       await deployFCCContracts();
 
@@ -384,5 +395,83 @@ describe("PrivacyRegistry â€” TEE audit trail", function () {
     }
 
     expect(await privacyRegistry.getTEEAuditCount()).to.equal(3n);
+  });
+});
+
+describe("InvoiceNFT - FCC encrypted mint", function () {
+  it("mints only after a valid FCC attestation over encrypted invoice commitments", async function () {
+    const { user1, invoiceNFT, mockFDC, teeSigner, teeId } = await deployFCCContracts();
+    await invoiceNFT.setFDCVerifier(await mockFDC.getAddress());
+    await invoiceNFT.setMintAttestationMode(true);
+
+    const dataCommitment = ethers.keccak256(ethers.toUtf8Bytes("encrypted-data-commitment"));
+    const amountCommitment = ethers.keccak256(ethers.toUtf8Bytes("amount-commitment"));
+    const encryptedInvoiceHash = ethers.keccak256(ethers.toUtf8Bytes("ciphertext"));
+    const dueDate = (await ethers.provider.getBlock("latest")).timestamp + 86400 * 45;
+    const nonce = Date.now();
+    const att = await createMintAttestation(
+      teeSigner, teeId, user1, dataCommitment, amountCommitment, encryptedInvoiceHash, dueDate, nonce
+    );
+
+    await expect(invoiceNFT.connect(user1).mintWithAttestation(teeId, att.payload, att.signature))
+      .to.emit(invoiceNFT, "FCCInvoiceMinted");
+
+    const tokenId = (await invoiceNFT.totalInvoices()) - 1n;
+    const invoice = await invoiceNFT.getInvoice(tokenId);
+    expect(invoice.issuer).to.equal(user1.address);
+    expect(invoice.dataCommitment).to.equal(dataCommitment);
+
+    const mintAttestation = await invoiceNFT.mintAttestations(tokenId);
+    expect(mintAttestation.attested).to.equal(true);
+    expect(mintAttestation.teeId).to.equal(teeId);
+    expect(mintAttestation.encryptedInvoiceHash).to.equal(encryptedInvoiceHash);
+  });
+
+  it("blocks legacy mint when FCC mint attestation mode is active", async function () {
+    const { user1, invoiceNFT, mockFDC } = await deployFCCContracts();
+    await invoiceNFT.setFDCVerifier(await mockFDC.getAddress());
+    await invoiceNFT.setMintAttestationMode(true);
+
+    const commitment = ethers.keccak256(ethers.toUtf8Bytes("legacy"));
+    const dueDate = (await ethers.provider.getBlock("latest")).timestamp + 86400 * 30;
+    await expect(invoiceNFT.connect(user1).mint(commitment, commitment, dueDate))
+      .to.be.revertedWith("FCC mint attestation required");
+  });
+
+  it("rejects replayed FCC mint nonces", async function () {
+    const { user1, invoiceNFT, mockFDC, teeSigner, teeId } = await deployFCCContracts();
+    await invoiceNFT.setFDCVerifier(await mockFDC.getAddress());
+    await invoiceNFT.setMintAttestationMode(true);
+
+    const dataCommitment = ethers.keccak256(ethers.toUtf8Bytes("data"));
+    const amountCommitment = ethers.keccak256(ethers.toUtf8Bytes("amount"));
+    const encryptedInvoiceHash = ethers.keccak256(ethers.toUtf8Bytes("ciphertext"));
+    const dueDate = (await ethers.provider.getBlock("latest")).timestamp + 86400 * 30;
+    const nonce = Date.now();
+    const att = await createMintAttestation(
+      teeSigner, teeId, user1, dataCommitment, amountCommitment, encryptedInvoiceHash, dueDate, nonce
+    );
+
+    await invoiceNFT.connect(user1).mintWithAttestation(teeId, att.payload, att.signature);
+    await expect(invoiceNFT.connect(user1).mintWithAttestation(teeId, att.payload, att.signature))
+      .to.be.revertedWith("FCC mint nonce already used");
+  });
+
+  it("rejects FCC mint payloads signed by an unauthorized signer", async function () {
+    const { user1, invoiceNFT, mockFDC, teeId } = await deployFCCContracts();
+    await invoiceNFT.setFDCVerifier(await mockFDC.getAddress());
+    await invoiceNFT.setMintAttestationMode(true);
+
+    const dataCommitment = ethers.keccak256(ethers.toUtf8Bytes("data"));
+    const amountCommitment = ethers.keccak256(ethers.toUtf8Bytes("amount"));
+    const encryptedInvoiceHash = ethers.keccak256(ethers.toUtf8Bytes("ciphertext"));
+    const dueDate = (await ethers.provider.getBlock("latest")).timestamp + 86400 * 30;
+    const badSigner = ethers.Wallet.createRandom();
+    const att = await createMintAttestation(
+      badSigner, teeId, user1, dataCommitment, amountCommitment, encryptedInvoiceHash, dueDate, Date.now()
+    );
+
+    await expect(invoiceNFT.connect(user1).mintWithAttestation(teeId, att.payload, att.signature))
+      .to.be.revertedWith("Invalid FCC mint attestation");
   });
 });

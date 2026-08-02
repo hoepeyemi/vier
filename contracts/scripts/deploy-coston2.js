@@ -16,7 +16,7 @@ async function main() {
 
   console.log("");
   console.log("=".repeat(60));
-  console.log("  vier Protocol — Flare Coston2 Deployment");
+  console.log("  vier Protocol Ã¢â‚¬â€ Flare Coston2 Deployment");
   console.log("=".repeat(60));
   console.log(`  Network:  ${network.name} (chainId ${network.chainId})`);
   console.log(`  Deployer: ${deployer.address}`);
@@ -26,55 +26,55 @@ async function main() {
   console.log("");
 
   if (balance === 0n) {
-    console.error("❌ Deployer has no CFLR. Get testnet tokens at: https://faucet.flare.network");
+    console.error("Ã¢ÂÅ’ Deployer has no CFLR. Get testnet tokens at: https://faucet.flare.network");
     process.exit(1);
   }
 
-  // ── 1. Core contracts ──────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ 1. Core contracts Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   console.log("1/6  Deploying InvoiceNFT...");
   const InvoiceNFT = await hre.ethers.getContractFactory("src/InvoiceNFT.sol:InvoiceNFT");
   const invoiceNFT = await InvoiceNFT.deploy();
   await invoiceNFT.waitForDeployment();
   const invoiceNFTAddress = await invoiceNFT.getAddress();
-  console.log(`     ✅ InvoiceNFT: ${invoiceNFTAddress}`);
+  console.log(`     Ã¢Å“â€¦ InvoiceNFT: ${invoiceNFTAddress}`);
 
   console.log("2/6  Deploying YieldVault...");
   const YieldVault = await hre.ethers.getContractFactory("YieldVault");
   const yieldVault = await YieldVault.deploy(invoiceNFTAddress);
   await yieldVault.waitForDeployment();
   const yieldVaultAddress = await yieldVault.getAddress();
-  console.log(`     ✅ YieldVault: ${yieldVaultAddress}`);
+  console.log(`     Ã¢Å“â€¦ YieldVault: ${yieldVaultAddress}`);
 
   console.log("3/6  Deploying PrivacyRegistry...");
   const PrivacyRegistry = await hre.ethers.getContractFactory("PrivacyRegistry");
   const privacyRegistry = await PrivacyRegistry.deploy();
   await privacyRegistry.waitForDeployment();
   const privacyRegistryAddress = await privacyRegistry.getAddress();
-  console.log(`     ✅ PrivacyRegistry: ${privacyRegistryAddress}`);
+  console.log(`     Ã¢Å“â€¦ PrivacyRegistry: ${privacyRegistryAddress}`);
 
   console.log("4/6  Deploying AgentRouter...");
   const AgentRouter = await hre.ethers.getContractFactory("AgentRouter");
   const agentRouter = await AgentRouter.deploy(invoiceNFTAddress, yieldVaultAddress);
   await agentRouter.waitForDeployment();
   const agentRouterAddress = await agentRouter.getAddress();
-  console.log(`     ✅ AgentRouter: ${agentRouterAddress}`);
+  console.log(`     Ã¢Å“â€¦ AgentRouter: ${agentRouterAddress}`);
 
-  // ── 2. Flare FCC contracts ─────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ 2. Flare FCC contracts Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   console.log("5/6  Deploying MockFDCVerifier (Flare Confidential Compute)...");
   const MockFDCVerifier = await hre.ethers.getContractFactory("MockFDCVerifier");
   const mockFDCVerifier = await MockFDCVerifier.deploy();
   await mockFDCVerifier.waitForDeployment();
   const mockFDCVerifierAddress = await mockFDCVerifier.getAddress();
-  console.log(`     ✅ MockFDCVerifier: ${mockFDCVerifierAddress}`);
+  console.log(`     Ã¢Å“â€¦ MockFDCVerifier: ${mockFDCVerifierAddress}`);
 
   console.log("6/6  Deploying MockOracle...");
   const MockOracle = await hre.ethers.getContractFactory("MockOracle");
   const mockOracle = await MockOracle.deploy(invoiceNFTAddress);
   await mockOracle.waitForDeployment();
   const mockOracleAddress = await mockOracle.getAddress();
-  console.log(`     ✅ MockOracle: ${mockOracleAddress}`);
+  console.log(`     Ã¢Å“â€¦ MockOracle: ${mockOracleAddress}`);
 
-  // ── 3. Wire contracts ──────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ 3. Wire contracts Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   console.log("");
   console.log("Wiring contract cross-references...");
 
@@ -83,7 +83,9 @@ async function main() {
   await (await invoiceNFT.setOracle(mockOracleAddress)).wait();
   await (await yieldVault.setAgentRouter(agentRouterAddress)).wait();
 
-  // Configure AgentRouter with Flare FCC integration
+  // Configure contracts with Flare FCC integration
+  await (await invoiceNFT.setFDCVerifier(mockFDCVerifierAddress)).wait();
+  await (await invoiceNFT.setMintAttestationMode(true)).wait();
   await (await agentRouter.setFDCVerifier(mockFDCVerifierAddress)).wait();
   await (await agentRouter.setPrivacyRegistry(privacyRegistryAddress)).wait();
   await (await agentRouter.setTEEAttestationMode(true)).wait();
@@ -91,10 +93,10 @@ async function main() {
   // Authorize AgentRouter to write TEE audit entries to PrivacyRegistry
   await (await privacyRegistry.addAuthorizedRouter(agentRouterAddress)).wait();
 
-  // ── 4. Register TEE identity ───────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ 4. Register TEE identity Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // teeId = keccak256(abi.encodePacked(imageHash, chainId))
   // The FCE_IMAGE_HASH should be the sha256 of the Dockerfile.fce image digest.
-  // For testnet demos, any bytes32 works — the agent must use the same value.
+  // For testnet demos, any bytes32 works Ã¢â‚¬â€ the agent must use the same value.
   const FCE_IMAGE_HASH =
     process.env.FCE_IMAGE_HASH ||
     "0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069";
@@ -115,7 +117,7 @@ async function main() {
     await (await agentRouter.authorizeAgent(teeSignerAddress)).wait();
   }
 
-  // ── 5. Save deployment ─────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ 5. Save deployment Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const deployment = {
     network: "coston2",
     chainId: 114,
@@ -132,6 +134,7 @@ async function main() {
       teeSignerAddress,
       fceImageHash: FCE_IMAGE_HASH,
       teeAttestationMode: true,
+      mintAttestationMode: true,
     },
   };
 
@@ -142,13 +145,13 @@ async function main() {
 
   console.log("");
   console.log("=".repeat(60));
-  console.log("  ✅ Flare Coston2 Deployment Complete");
+  console.log("  Ã¢Å“â€¦ Flare Coston2 Deployment Complete");
   console.log("=".repeat(60));
   console.log(`  InvoiceNFT:      ${invoiceNFTAddress}`);
   console.log(`  YieldVault:      ${yieldVaultAddress}`);
   console.log(`  PrivacyRegistry: ${privacyRegistryAddress}`);
   console.log(`  AgentRouter:     ${agentRouterAddress}`);
-  console.log(`  MockFDCVerifier: ${mockFDCVerifierAddress}  ← Flare FCC`);
+  console.log(`  MockFDCVerifier: ${mockFDCVerifierAddress}  Ã¢â€ Â Flare FCC`);
   console.log(`  MockOracle:      ${mockOracleAddress}`);
   console.log("");
   console.log("  FCC Configuration:");

@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -18,7 +17,7 @@ import {
 import { TerminalNav } from "@/components/terminal-nav"
 import { StatusBar } from "@/components/ui/status-bar"
 import { Lock, Eye, EyeOff, Shield, UserPlus, Copy, Check, FileText, AlertTriangle, Loader2 } from "lucide-react"
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { useInvoiceNFT } from "@/hooks/use-invoice-nft"
 import { InvoiceNFTABI } from "@/lib/contracts/abis"
 import { getInvoiceNFTAddress } from "@/lib/contracts/addresses"
@@ -29,8 +28,18 @@ import { isAddress } from "viem"
 interface InvoicePrivacy {
   tokenId: string
   dataCommitment: string
+  amountCommitment: string
+  status: string
   isRevealed: boolean
   authorizedAddresses: string[]
+}
+
+interface InvoiceResponse {
+  tokenId: string
+  dataCommitment: string
+  amountCommitment: string
+  status: string
+  issuer: string
 }
 
 export default function IssuerDashboardPage() {
@@ -41,7 +50,7 @@ export default function IssuerDashboardPage() {
   const networkLabel = chainMeta?.shortName
     ? `${chainMeta.name.toUpperCase()} (${chainMeta.shortName})`
     : `CHAIN ${chainId}`
-  const { totalInvoices, userBalance } = useInvoiceNFT()
+  const { totalInvoices } = useInvoiceNFT()
 
   const [invoices, setInvoices] = useState<InvoicePrivacy[]>([])
   const [selectedInvoice, setSelectedInvoice] = useState<InvoicePrivacy | null>(null)
@@ -54,36 +63,49 @@ export default function IssuerDashboardPage() {
   const { writeContract, data: txHash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash })
 
-  // Fetch user's invoices
+  // Fetch invoices issued by this wallet. Deposited invoices are owned by the vault,
+  // so balanceOf(address) is not a reliable privacy-page source.
   useEffect(() => {
     async function fetchUserInvoices() {
-      if (!isConnected || !address || userBalance === 0) {
+      if (!isConnected || !address) {
         setInvoices([])
         setIsLoading(false)
         return
       }
 
+      setIsLoading(true)
+
       try {
-        // For demo, create mock invoice data based on user balance
-        const mockInvoices: InvoicePrivacy[] = []
-        for (let i = 1; i <= Math.min(userBalance, 5); i++) {
-          mockInvoices.push({
-            tokenId: i.toString(),
-            dataCommitment: `0x${Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        const response = await fetch(`/api/invoices`, { cache: "no-store" })
+        const data = await response.json()
+
+        if (!data.success || !data.data?.invoices) {
+          throw new Error(data.error || "Failed to fetch invoices")
+        }
+
+        const normalizedAddress = address.toLowerCase()
+        const issuedInvoices: InvoicePrivacy[] = (data.data.invoices as InvoiceResponse[])
+          .filter((invoice) => invoice.issuer?.toLowerCase() === normalizedAddress)
+          .map((invoice) => ({
+            tokenId: invoice.tokenId,
+            dataCommitment: invoice.dataCommitment,
+            amountCommitment: invoice.amountCommitment,
+            status: invoice.status,
             isRevealed: false,
             authorizedAddresses: [],
-          })
-        }
-        setInvoices(mockInvoices)
+          }))
+
+        setInvoices(issuedInvoices)
       } catch (error) {
         console.error("Failed to fetch invoices:", error)
+        setInvoices([])
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchUserInvoices()
-  }, [isConnected, address, userBalance])
+  }, [isConnected, address])
 
   const handleAuthorize = () => {
     if (!selectedInvoice || !newAddress || !isAddress(newAddress)) return
@@ -138,7 +160,7 @@ export default function IssuerDashboardPage() {
           </div>
           <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
             <Lock className="w-3 h-3 mr-2" />
-            {userBalance} Invoice{userBalance !== 1 ? 's' : ''} Protected
+            {invoices.length} Invoice{invoices.length !== 1 ? 's' : ''} Protected
           </Badge>
         </div>
 

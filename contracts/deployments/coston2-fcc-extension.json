@@ -1,0 +1,18 @@
+{
+  "network": "coston2",
+  "chainId": 114,
+  "timestamp": "2026-08-01T23:41:06.249Z",
+  "deployer": "0x9404966338eB27aF420a952574d777598Bbb58c4",
+  "instructionSender": "0x6Aa62B3979D4cdc6E3A84772d66dC45adA047CaB",
+  "flareContractRegistry": "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019",
+  "teeExtensionRegistryName": "TeeExtensionRegistry",
+  "teeMachineRegistryName": "TeeMachineRegistry",
+  "teeExtensionRegistry": "0x1a9C4A0f9D76c0b1D91d22E24E573a9b377618aE",
+  "teeMachineRegistry": "0x1a9C4A0f9D76c0b1D91d22E24E573a9b377618aE",
+  "opType": "VIER",
+  "commands": {
+    "attestMint": "ATTEST_MINT",
+    "analyzeStrategy": "ANALYZE_STRATEGY"
+  },
+  "note": "Register this sender as the instructions sender for the vier FCC extension, then call setExtensionId()."
+}
